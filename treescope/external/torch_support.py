@@ -24,7 +24,7 @@ from treescope import context
 from treescope import formatting_util
 from treescope import lowering
 from treescope import ndarray_adapters
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope import type_registries
 
@@ -258,7 +258,7 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
 def render_torch_tensors(
     node: torch.Tensor,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -334,7 +334,7 @@ def render_torch_tensors(
 def render_torch_modules(
     node: torch.nn.Module,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

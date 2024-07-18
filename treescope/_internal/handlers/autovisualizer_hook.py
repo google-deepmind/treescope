@@ -18,21 +18,21 @@ from __future__ import annotations
 
 from typing import Any
 
-from treescope import autovisualize
 from treescope import lowering
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope._internal import object_inspection
+from treescope._internal.api import autovisualize
 
 IPythonVisualization = autovisualize.IPythonVisualization
-CustomTreescopeVisualization = autovisualize.CustomTreescopeVisualization
+VisualizationFromTreescopePart = autovisualize.VisualizationFromTreescopePart
 ChildAutovisualizer = autovisualize.ChildAutovisualizer
 
 
 def use_autovisualizer_if_present(
     node: Any,
     path: str | None,
-    node_renderer: renderer.TreescopeSubtreeRenderer,
+    node_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -45,7 +45,9 @@ def use_autovisualizer_if_present(
     # Continue as normal.
     return NotImplemented
 
-  elif isinstance(result, IPythonVisualization | CustomTreescopeVisualization):
+  elif isinstance(
+      result, IPythonVisualization | VisualizationFromTreescopePart
+  ):
     # We should use this visualization instead.
 
     # Fallback: Render normally for round-trip mode, and if this wasn't a
@@ -128,7 +130,7 @@ def use_autovisualizer_if_present(
             annotations=rendering_parts.empty_part(),
         )
     else:
-      assert isinstance(result, CustomTreescopeVisualization)
+      assert isinstance(result, VisualizationFromTreescopePart)
       replace = True
       rendering_and_annotations = result.rendering
 
@@ -168,7 +170,7 @@ def use_autovisualizer_if_present(
         line=rendering_parts.error_color(
             rendering_parts.text(
                 f"<Autovizualizer returned an invalid value {result}; expected"
-                " IPythonVisualization, CustomTreescopeVisualization,"
+                " IPythonVisualization, VisualizationFromTreescopePart,"
                 " ChildAutovisualizer, or None>"
             )
         ),

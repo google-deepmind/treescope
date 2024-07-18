@@ -22,51 +22,57 @@ or, for more control: ::
 
   treescope.register_as_default()
   treescope.register_autovisualize_magic()
-  treescope.enable_interactive_context()
-  treescope.active_autovisualizer.set_interactive(treescope.ArrayAutovisualizer())
+  treescope.active_autovisualizer.set_globally(
+      treescope.ArrayAutovisualizer()
+  )
 
 You can also pretty-print individual values using `treescope.show` or
 `treescope.display`.
 """
+
+__version__ = '0.1.0.dev0'
+
 # pylint: disable=g-importing-member,g-multiple-import,unused-import
 
-from . import array_autovisualizer
-from . import arrayviz
-from . import autovisualize
 from . import canonical_aliases
 from . import context
 from . import dataclass_util
-from . import default_renderer
 from . import figures
 from . import formatting_util
 from . import handlers
 from . import lowering
 from . import ndarray_adapters
-from . import renderer
+from . import renderers
 from . import rendering_parts
 from . import repr_lib
-from . import treescope_ipython
 from . import type_registries
 
-from .array_autovisualizer import (
+from ._internal.api.array_autovisualizer import (
     ArrayAutovisualizer,
 )
-from .arrayviz import (
+from ._internal.api.arrayviz import (
+    default_diverging_colormap,
+    default_sequential_colormap,
     integer_digitbox,
     render_array,
     render_array_sharding,
-    text_on_color,
 )
-from .context import (
-    disable_interactive_context,
-    enable_interactive_context,
+from ._internal.api.autovisualize import (
+    IPythonVisualization,
+    VisualizationFromTreescopePart,
+    ChildAutovisualizer,
+    Autovisualizer,
+    active_autovisualizer,
 )
-from .default_renderer import (
+from ._internal.api.default_renderer import (
+    active_renderer,
+    active_expansion_strategy,
     render_to_html,
     render_to_text,
     using_expansion_strategy,
 )
-from .treescope_ipython import (
+from ._internal.api.ipython_integration import (
+    default_magic_autovisualizer,
     basic_interactive_setup,
     display,
     register_as_default,
@@ -74,3 +80,18 @@ from .treescope_ipython import (
     register_context_manager_magic,
     show,
 )
+
+
+# Set up canonical aliases for the treescope API itself.
+def _setup_canonical_aliases_for_api():
+  import types  # pylint: disable=g-import-not-at-top
+
+  for key, value in globals().items():
+    if isinstance(value, types.FunctionType) or isinstance(value, type):
+      canonical_aliases.add_alias(
+          value, canonical_aliases.ModuleAttributePath(__name__, (key,))
+      )
+
+
+_setup_canonical_aliases_for_api()
+del _setup_canonical_aliases_for_api

@@ -29,7 +29,7 @@ from typing import Any
 
 from treescope import context
 from treescope import lowering
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope._internal import object_inspection
 
@@ -52,7 +52,7 @@ rich HTML representation of the outermost element.
 def append_repr_html_when_present(
     node: Any,
     path: str | None,
-    node_renderer: renderer.TreescopeSubtreeRenderer,
+    node_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

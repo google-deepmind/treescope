@@ -17,40 +17,17 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
-import typing
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
+
 
 T = TypeVar("T")
 
 
-_INTERACTIVE_CONTEXT_STACK: contextlib.ExitStack | None = None
+@dataclasses.dataclass(frozen=True)
+class _NoScopedValue:
+  """Sentinel value for when no scoped value is set."""
 
-
-def enable_interactive_context() -> None:
-  """Enables the global interactive context stack.
-
-  By default, ContextualValues can only be changed in a scoped ``with`` block.
-  This function turns on interactive mode, enabling those contexts to be set
-  persistently in an interactive setting. To turn it back off, see
-  `disable_interactive_context`.
-
-  Interactive mode is itself a thin wrapper around a contextlib ``ExitStack``.
-  """
-  global _INTERACTIVE_CONTEXT_STACK
-  if _INTERACTIVE_CONTEXT_STACK is None:
-    _INTERACTIVE_CONTEXT_STACK = contextlib.ExitStack()
-
-
-def disable_interactive_context() -> None:
-  """Clears the global interactive context stack and disables interactive mode.
-
-  This function closes all context managers entered in an interactive context,
-  restoring all contextual values to their original states.
-  """
-  global _INTERACTIVE_CONTEXT_STACK
-  if _INTERACTIVE_CONTEXT_STACK is not None:
-    _INTERACTIVE_CONTEXT_STACK.close()
-    _INTERACTIVE_CONTEXT_STACK = None
+  pass
 
 
 @dataclasses.dataclass(init=False)
@@ -63,12 +40,11 @@ class ContextualValue(Generic[T]):
   value within a particular delimited scope, without affecting anything beyond
   that scope.
 
-  This class manages a restricted form of global value access to support this
-  use case: read access is allowed anywhere, but updates are only "local", in
-  the sense that they apply for the duration of a delimited scope and don't
-  affect anything beyond that scope. (This is similar to a Reader monad in
-  functional programming languages.)
+  This class manages a global value that can be read anywhere, and modified
+  either globally or within a delimited scope. Local values always take
+  precedence over global values.
 
+  When used within a function, it is usually recommended to use scoped updates.
   If you have many values to set, or you want to set them conditionally,
   consider using a `contextlib.ExitStack`, e.g.
 
@@ -93,22 +69,20 @@ class ContextualValue(Generic[T]):
       # ... then eventually:
       stack.close()
 
-  If you would like to modify contextual values at the global level (e.g. for
-  interactive use), you can call `enable_interactive_context` in this
-  module and then use `set_interactive` instead of `set_scoped`;
-  this is actually implemented using an internally-managed global ``ExitStack``.
-
   Attributes:
     __module__: The module where this contextual value is defined.
     __qualname__: The fully-qualified name of the contextual value within its
       module.
-    _raw_value: The current value. Should not be used directly; use `get` to get
-      it or `set_scoped` to set it within a context.
+    _raw_global_value: The current value at the global level. Should not be used
+      directly.
+    _raw_scoped_value: The current value at the scoped level. Should not be used
+      directly.
   """
 
   __module__: str | None
   __qualname__: str | None
-  _raw_value: T
+  _raw_global_value: T
+  _raw_scoped_value: T | _NoScopedValue
 
   def __init__(
       self,
@@ -127,14 +101,18 @@ class ContextualValue(Generic[T]):
     """
     self.__module__ = module
     self.__qualname__ = qualname
-    self._raw_value = initial_value
+    self._raw_global_value = initial_value
+    self._raw_scoped_value = _NoScopedValue()
 
   def get(self) -> T:
     """Retrieves the current value."""
-    return self._raw_value
+    if isinstance(self._raw_scoped_value, _NoScopedValue):
+      return self._raw_global_value
+    else:
+      return self._raw_scoped_value
 
   @contextlib.contextmanager
-  def set_scoped(self: ContextualValue[T], new_value: T):
+  def set_scoped(self, new_value: T):
     # pylint: disable=g-doc-return-or-yield
     """Returns a context manager in which the value will be modified.
 
@@ -167,38 +145,28 @@ class ContextualValue(Generic[T]):
       A context manager in which ``new_value`` is set.
     """
     # pylint: enable=g-doc-return-or-yield
-    old_value = self._raw_value
-    self._raw_value = new_value
+    old_value = self._raw_scoped_value
+    self._raw_scoped_value = new_value
     try:
       yield
     finally:
-      assert self._raw_value is new_value
-      self._raw_value = old_value
+      assert self._raw_scoped_value is new_value
+      self._raw_scoped_value = old_value
 
-  def set_interactive(self: ContextualValue[T], new_value: T) -> None:
-    """Sets the value in interactive mode.
+  def set_globally(self, new_value: T) -> None:
+    """Sets the value at the global level.
 
-    This function should ONLY be called in an interactive setting (e.g. a Colab
-    notebook or repl), and must be called after
-    `enable_interactive_context` but before
-    `disable_interactive_context`.
-
-    `disable_interactive_context` will restore all contexts set using
-    `set_interactive` to their original states.
+    Updates at the global level will be overridden by any scoped updates.
 
     Args:
-      new_value: The new value to use in this context.
-
-    Raises:
-      RuntimeError: If interactive contexts have not been enabled.
+      new_value: The new value to use.
     """
-    if _INTERACTIVE_CONTEXT_STACK is None:
-      raise RuntimeError(
-          "`set_interactive` should only be used in an interactive setting. To"
-          " turn on interactive mode, call"
-          " `treescope.enable_interactive_context()`."
-      )
+    self._raw_global_value = new_value
 
-    # Pytype gets confused about the types here, so we just tell it not to try.
-    new_context = typing.cast(Any, self).set_scoped(new_value)
-    _INTERACTIVE_CONTEXT_STACK.enter_context(new_context)
+  def set_interactive(self, new_value: T) -> None:
+    """Alias for `set_globally`, for consistency with older Penzai API.
+
+    Args:
+      new_value: The new value to use.
+    """
+    self.set_globally(new_value)

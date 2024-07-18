@@ -22,7 +22,7 @@ import types
 from typing import Any
 
 from treescope import formatting_util
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope._internal import html_escaping
 from treescope._internal.parts import basic_parts
@@ -80,7 +80,7 @@ class StringLiteralColor(basic_parts.BaseSpanGroup):
 def render_string_or_bytes(
     node: str | bytes,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -123,7 +123,7 @@ def render_string_or_bytes(
 def render_numeric_literal(
     node: int | float,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -139,7 +139,7 @@ def render_numeric_literal(
 def render_keyword(
     node: bool | None | type(Ellipsis) | type(NotImplemented),
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -155,7 +155,7 @@ def render_keyword(
 def render_enum(
     node: enum.Enum,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -182,7 +182,7 @@ def render_enum(
 def render_dict(
     node: dict[Any, Any],
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> rendering_parts.RenderableAndLineAnnotations:
   """Renders a dictionary."""
 
@@ -265,7 +265,7 @@ def render_dict(
 def render_sequence_or_set(
     sequence: dict[Any, Any],
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> rendering_parts.RenderableAndLineAnnotations:
   """Renders a sequence or set to a foldable."""
   if (
@@ -350,7 +350,7 @@ def render_sequence_or_set(
 def render_simplenamespace(
     node: types.SimpleNamespace,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> rendering_parts.RenderableAndLineAnnotations:
   """Renders a SimpleNamespace."""
   return rendering_parts.build_foldable_tree_node_from_children(
@@ -371,7 +371,7 @@ def render_simplenamespace(
 def render_namedtuple_or_ast(
     node: tuple[Any, ...] | ast.AST,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> rendering_parts.RenderableAndLineAnnotations:
   """Renders a namedtuple or AST class."""
   ty = type(node)
@@ -413,7 +413,7 @@ BUILTINS_REGISTRY = {
 def handle_basic_types(
     node: Any,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

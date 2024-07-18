@@ -24,16 +24,6 @@ from treescope import dataclass_util
 class ContextualValueTest(absltest.TestCase):
   """Tests for core/context.py."""
 
-  def setUp(self):
-    super().setUp()
-    # Make sure we aren't in an interactive context.
-    context.disable_interactive_context()
-
-  def tearDown(self):
-    # Make sure we exit any interactive context from the test.
-    context.disable_interactive_context()
-    super().tearDown()
-
   def test_set_scoped(self):
     ctx_value = context.ContextualValue(
         initial_value=1, module=__name__, qualname=None
@@ -48,31 +38,19 @@ class ContextualValueTest(absltest.TestCase):
 
     self.assertEqual(ctx_value.get(), 1)
 
-  def test_set_interactive(self):
+  def test_set_globally(self):
     ctx_value = context.ContextualValue(
         initial_value=1, module=__name__, qualname=None
     )
-    with self.assertRaisesRegex(
-        RuntimeError,
-        re.escape(
-            "`set_interactive` should only be used in an interactive setting."
-        ),
-    ):
-      ctx_value.set_interactive(2)
-
     self.assertEqual(ctx_value.get(), 1)
 
-    context.enable_interactive_context()
-    ctx_value.set_interactive(2)
+    ctx_value.set_globally(2)
     self.assertEqual(ctx_value.get(), 2)
 
     with ctx_value.set_scoped(3):
       self.assertEqual(ctx_value.get(), 3)
 
     self.assertEqual(ctx_value.get(), 2)
-
-    context.disable_interactive_context()
-    self.assertEqual(ctx_value.get(), 1)
 
 
 class DataclassUtilTest(absltest.TestCase):

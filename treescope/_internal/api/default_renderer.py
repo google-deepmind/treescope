@@ -21,16 +21,16 @@ from treescope import context
 from treescope import handlers
 from treescope import layout_algorithms
 from treescope import lowering
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope import type_registries
 
 
-active_renderer: context.ContextualValue[renderer.TreescopeRenderer] = (
+active_renderer: context.ContextualValue[renderers.TreescopeRenderer] = (
     context.ContextualValue(
         module=__name__,
         qualname="active_renderer",
-        initial_value=renderer.TreescopeRenderer(
+        initial_value=renderers.TreescopeRenderer(
             handlers=[
                 # Objects with `__treescope_repr__` defined.
                 handlers.handle_via_treescope_repr_method,

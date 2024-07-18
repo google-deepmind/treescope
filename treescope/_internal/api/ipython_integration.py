@@ -17,14 +17,14 @@
 import contextlib
 from typing import Any
 
-from treescope import array_autovisualizer
-from treescope import autovisualize
 from treescope import context
-from treescope import default_renderer
 from treescope import figures
 from treescope import lowering
 from treescope import rendering_parts
 from treescope._internal import object_inspection
+from treescope._internal.api import array_autovisualizer
+from treescope._internal.api import autovisualize
+from treescope._internal.api import default_renderer
 
 # pylint: disable=g-import-not-at-top
 try:
@@ -44,8 +44,7 @@ def display(
 ):
   """Displays a value as an interactively foldable object.
 
-  Uses the default renderer. See `default_renderer.to_foldable_html` for
-  details.
+  Uses the default renderer.
 
   Args:
     value: Value to fold.
@@ -286,8 +285,8 @@ if IPython is not None:
 
       which expands to something like ::
 
-        with treescope.autovisualize.active_autovisualizer.set_scoped(
-            treescope_ipython.default_magic_autovisualizer.get()
+        with treescope.active_autovisualizer.set_scoped(
+            treescope.default_magic_autovisualizer.get()
         ):
           # ... contents of your cell ...
           result = ...
@@ -304,9 +303,7 @@ if IPython is not None:
 
       which expands to something like ::
 
-        with treescope.autovisualize.active_autovisualizer.set_scoped(
-            my_autovisualizer
-        ):
+        with treescope.active_autovisualizer.set_scoped(my_autovisualizer):
           # ... contents of your cell ...
           result = ...
           IPython.display.display(result)
@@ -417,9 +414,8 @@ def basic_interactive_setup(autovisualize_arrays: bool = True):
   register_as_default()
   register_autovisualize_magic()
   register_context_manager_magic()
-  context.enable_interactive_context()
 
   if autovisualize_arrays:
-    autovisualize.active_autovisualizer.set_interactive(
+    autovisualize.active_autovisualizer.set_globally(
         array_autovisualizer.ArrayAutovisualizer()
     )

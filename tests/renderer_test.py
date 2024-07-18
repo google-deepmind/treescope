@@ -29,8 +29,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import torch
-from treescope import autovisualize
-from treescope import default_renderer
+import treescope
 from treescope import handlers
 from treescope import layout_algorithms
 from treescope import lowering
@@ -49,7 +48,7 @@ class CustomReprHTMLObject:
 class TreescopeRendererTest(parameterized.TestCase):
 
   def test_renderer_interface(self):
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
 
     rendering = renderer.to_text({"key": "value"})
     self.assertEqual(rendering, "{'key': 'value'}")
@@ -63,10 +62,10 @@ class TreescopeRendererTest(parameterized.TestCase):
     )
 
   def test_high_level_interface(self):
-    rendering = default_renderer.render_to_text({"key": "value"})
+    rendering = treescope.render_to_text({"key": "value"})
     self.assertEqual(rendering, "{'key': 'value'}")
 
-    rendering = default_renderer.render_to_html({"key": "value"})
+    rendering = treescope.render_to_html({"key": "value"})
     self.assertIsInstance(rendering, str)
 
   def test_error_recovery(self):
@@ -82,7 +81,7 @@ class TreescopeRendererTest(parameterized.TestCase):
         raise RuntimeError("hook error!")
       return NotImplemented
 
-    renderer = default_renderer.active_renderer.get().extended_with(
+    renderer = treescope.active_renderer.get().extended_with(
         handlers=[handler_that_crashes], wrapper_hooks=[hook_that_crashes]
     )
 
@@ -394,18 +393,18 @@ class TreescopeRendererTest(parameterized.TestCase):
       ),
       dict(
           testcase_name="well_known_function",
-          target=default_renderer.render_to_text,
+          target=treescope.render_to_text,
           expected_collapsed="render_to_text",
           expected_roundtrip_collapsed=(
-              "treescope.default_renderer.render_to_text"
+              "treescope.render_to_text"
           ),
       ),
       dict(
           testcase_name="well_known_type",
-          target=autovisualize.IPythonVisualization,
+          target=treescope.IPythonVisualization,
           expected_collapsed="IPythonVisualization",
           expected_roundtrip_collapsed=(
-              "treescope.autovisualize.IPythonVisualization"
+              "treescope.IPythonVisualization"
           ),
       ),
       dict(
@@ -539,7 +538,7 @@ class TreescopeRendererTest(parameterized.TestCase):
       assert target is None
       target = target_builder()
 
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     # Render it to IR.
     rendering = rendering_parts.build_full_line_with_annotations(
         renderer.to_foldable_representation(target)
@@ -591,7 +590,7 @@ class TreescopeRendererTest(parameterized.TestCase):
 
     closure = outer_fn(100)
 
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     # Enable closure rendering (currently disabled by default)
     renderer = renderer.extended_with(
         handlers=[
@@ -624,7 +623,7 @@ class TreescopeRendererTest(parameterized.TestCase):
 
   def test_fallback_repr_pytree_node(self):
     target = [fixture_lib.UnknownPytreeNode(1234, 5678)]
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     rendering = rendering_parts.build_full_line_with_annotations(
         renderer.to_foldable_representation(target)
     )
@@ -654,7 +653,7 @@ class TreescopeRendererTest(parameterized.TestCase):
 
   def test_fallback_repr_one_line(self):
     target = [fixture_lib.UnknownObjectWithOneLineRepr()]
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     rendering = rendering_parts.build_full_line_with_annotations(
         renderer.to_foldable_representation(target)
     )
@@ -674,7 +673,7 @@ class TreescopeRendererTest(parameterized.TestCase):
 
   def test_fallback_repr_multiline_idiomatic(self):
     target = [fixture_lib.UnknownObjectWithMultiLineRepr()]
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     rendering = rendering_parts.build_full_line_with_annotations(
         renderer.to_foldable_representation(target)
     )
@@ -697,7 +696,7 @@ class TreescopeRendererTest(parameterized.TestCase):
 
   def test_fallback_repr_multiline_unidiomatic(self):
     target = [fixture_lib.UnknownObjectWithBadMultiLineRepr()]
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     rendering = rendering_parts.build_full_line_with_annotations(
         renderer.to_foldable_representation(target)
     )
@@ -721,7 +720,7 @@ class TreescopeRendererTest(parameterized.TestCase):
 
   def test_fallback_repr_basic(self):
     target = [fixture_lib.UnknownObjectWithBuiltinRepr()]
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     rendering = rendering_parts.build_full_line_with_annotations(
         renderer.to_foldable_representation(target)
     )
@@ -742,7 +741,7 @@ class TreescopeRendererTest(parameterized.TestCase):
   def test_shared_values(self):
     shared = ["bar"]
     target = [shared, shared, {"foo": shared}]
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     rendering = rendering_parts.build_full_line_with_annotations(
         renderer.to_foldable_representation(target)
     )
@@ -775,39 +774,39 @@ class TreescopeRendererTest(parameterized.TestCase):
 
     def autovisualizer_for_test(node, path):
       if isinstance(node, str):
-        return autovisualize.CustomTreescopeVisualization(
+        return treescope.VisualizationFromTreescopePart(
             rendering_parts.RenderableAndLineAnnotations(
                 rendering_parts.text("(visualiation for foo goes here)"),
                 rendering_parts.text(" # annotation for vis for foo"),
             ),
         )
       elif path == "[4]":
-        return autovisualize.IPythonVisualization(
+        return treescope.IPythonVisualization(
             CustomReprHTMLObject("(html rendering)"),
             replace=True,
         )
       elif path == "[5]":
-        return autovisualize.IPythonVisualization(
+        return treescope.IPythonVisualization(
             CustomReprHTMLObject("(html rendering)"),
             replace=False,
         )
       elif path == "[6]":
-        return autovisualize.ChildAutovisualizer(inner_autovisualizer)
+        return treescope.ChildAutovisualizer(inner_autovisualizer)
 
     def inner_autovisualizer(node, path):
       del path
       if node == 6:
-        return autovisualize.CustomTreescopeVisualization(
+        return treescope.VisualizationFromTreescopePart(
             rendering_parts.RenderableAndLineAnnotations(
                 rendering_parts.text("(child visualiation of 6 goes here)"),
                 rendering_parts.text(" # annotation for vis for 6"),
             ),
         )
 
-    with autovisualize.active_autovisualizer.set_scoped(
+    with treescope.active_autovisualizer.set_scoped(
         autovisualizer_for_test
     ):
-      renderer = default_renderer.active_renderer.get()
+      renderer = treescope.active_renderer.get()
       rendering = rendering_parts.build_full_line_with_annotations(
           renderer.to_foldable_representation(target)
       )
@@ -862,7 +861,7 @@ class TreescopeRendererTest(parameterized.TestCase):
     )
 
   def test_balanced_layout(self):
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     some_nested_object = fixture_lib.DataclassWithOneChild([
         ["foo"] * 4,
         ["12345678901234567890"] * 5,
@@ -974,7 +973,7 @@ class TreescopeRendererTest(parameterized.TestCase):
       )
 
   def test_balanced_layout_after_manual_expansion(self):
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     some_nested_object = [
         fixture_lib.DataclassWithOneChild(
             [["foo"] * 4, (["baz"] * 5, ["qux"] * 5)]
@@ -1029,7 +1028,7 @@ class TreescopeRendererTest(parameterized.TestCase):
     )
 
   def test_balanced_layout_relaxes_height_constraint_once(self):
-    renderer = default_renderer.active_renderer.get()
+    renderer = treescope.active_renderer.get()
     some_nested_object = [
         fixture_lib.DataclassWithOneChild(
             [fixture_lib.DataclassWithOneChild(["abcdefghik"] * 20)]

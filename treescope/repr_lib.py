@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 
 
@@ -32,7 +32,7 @@ def render_object_constructor(
     object_type: type[Any],
     attributes: Mapping[str, Any],
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
     roundtrippable: bool = False,
     color: str | None = None,
 ) -> rendering_parts.Rendering:
@@ -134,7 +134,7 @@ def render_dictionary_wrapper(
     object_type: type[Any],
     wrapped_dict: Mapping[str, Any],
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
     roundtrippable: bool = False,
     color: str | None = None,
 ) -> rendering_parts.Rendering:
@@ -267,7 +267,7 @@ def render_enumlike_item(
     item_name: str,
     item_value: Any,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

@@ -35,14 +35,14 @@ from __future__ import annotations
 from typing import Any
 
 from treescope import canonical_aliases
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 
 
 def replace_with_canonical_aliases(
     node: Any,
     path: str | None,
-    node_renderer: renderer.TreescopeSubtreeRenderer,
+    node_renderer: renderers.TreescopeSubtreeRenderer,
     summarization_threshold: int = 20,
 ) -> (
     rendering_parts.RenderableTreePart

@@ -25,8 +25,8 @@ because the registries are defined as global variables, without a mechanism for
 resolving conflicts between multiple entries. If you would like to customize the
 rendering of a type that treescope already supports, you should generally either
 define your own treescope renderer object and use it directly, or override the
-default renderer or autovisualizer defined in
-`treescope.default_renderer` using the `set_scoped` and `set_interactive`
+default renderer or autovisualizer (`treescope.active_renderer` and
+`treescope.active_autovisualizer`) using the `set_scoped` and `set_globally`
 methods. This will take precedence over any global registry entries.
 """
 
@@ -39,7 +39,7 @@ import types
 from typing import Any, TypeVar
 
 from treescope import ndarray_adapters
-from treescope import renderer
+from treescope import renderers
 from treescope._internal import object_inspection
 
 T = TypeVar("T")
@@ -62,7 +62,7 @@ function, which will also check for the __treescope_ndarray_adapter__ method
 on the type.
 """
 
-TREESCOPE_HANDLER_REGISTRY: dict[type[Any], renderer.TreescopeNodeHandler] = {}
+TREESCOPE_HANDLER_REGISTRY: dict[type[Any], renderers.TreescopeNodeHandler] = {}
 """Global registry of custom treescope handlers, keyed by type.
 
 If a type is not present in this registry, the entries of that type's `__mro__`
@@ -207,7 +207,7 @@ def lookup_immutability_for_type(candidate_type: type[Any]) -> bool:
 
 def lookup_treescope_handler_for_type(
     candidate_type: type[Any],
-) -> renderer.TreescopeNodeHandler | None:
+) -> renderers.TreescopeNodeHandler | None:
   """Looks up a treescope handler for the given type.
 
   This function can be used to look up a treescope handler for an object using

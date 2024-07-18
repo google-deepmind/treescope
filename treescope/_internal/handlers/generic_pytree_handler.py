@@ -18,14 +18,14 @@ import sys
 from typing import Any
 
 from treescope import handlers
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 
 
 def handle_arbitrary_pytrees(
     node: Any,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

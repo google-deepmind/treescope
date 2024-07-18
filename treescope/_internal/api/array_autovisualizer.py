@@ -20,14 +20,14 @@ import sys
 from typing import Any, Callable, Collection
 
 import numpy as np
-from treescope import arrayviz
-from treescope import autovisualize
 from treescope import dtype_util
 from treescope import lowering
 from treescope import ndarray_adapters
 from treescope import rendering_parts
 from treescope import type_registries
 from treescope._internal import arrayviz_impl
+from treescope._internal.api import arrayviz
+from treescope._internal.api import autovisualize
 
 
 PositionalAxisInfo = ndarray_adapters.PositionalAxisInfo
@@ -235,7 +235,7 @@ class ArrayAutovisualizer:
 
   def __call__(
       self, value: Any, path: str | None
-  ) -> autovisualize.CustomTreescopeVisualization | None:
+  ) -> autovisualize.VisualizationFromTreescopePart | None:
     """Implementation of an autovisualizer, visualizing arrays."""
     # Retrieve the adapter for this array, which we will use to construct
     # the rendering.
@@ -276,7 +276,7 @@ class ArrayAutovisualizer:
             value, adapter, path, label, expand_state
         )
 
-      return autovisualize.CustomTreescopeVisualization(
+      return autovisualize.VisualizationFromTreescopePart(
           rendering_parts.RenderableAndLineAnnotations(
               renderable=lowering.maybe_defer_rendering(
                   _thunk, _placeholder, expanded_newlines_for_layout=8
@@ -362,7 +362,7 @@ class ArrayAutovisualizer:
             path=path,
             expand_state=rendering_parts.ExpandState.EXPANDED,
         )
-        return autovisualize.CustomTreescopeVisualization(custom_rendering)
+        return autovisualize.VisualizationFromTreescopePart(custom_rendering)
       else:
         return None
 

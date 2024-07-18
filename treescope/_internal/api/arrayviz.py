@@ -30,11 +30,12 @@ import numpy as np
 from treescope import context
 from treescope import dtype_util
 from treescope import ndarray_adapters
-from treescope import rendering_parts
 from treescope import type_registries
 from treescope._internal import arrayviz_impl
 from treescope._internal import figures_impl
 from treescope._internal import html_escaping
+from treescope._internal.parts import basic_parts
+from treescope._internal.parts import common_styles
 
 AxisName = Any
 
@@ -693,7 +694,7 @@ def _render_pretruncated(
 
 
 def render_sharding_info(
-    array_axis_info: tuple[AxisInfo, ...],
+    array_axis_info: Sequence[AxisInfo],
     sharding_info: ndarray_adapters.ShardingInfo,
     rows: Sequence[int | AxisName] = (),
     columns: Sequence[int | AxisName] = (),
@@ -946,9 +947,7 @@ def render_sharding_info(
     if i == 0:
       html_srcs.append(f"{sharding_info.device_type}")
     label = ",".join(f"{d}" for d in shard_devices)
-    part = integer_digitbox(
-        shard_offset_values[shard_offsets], label_bottom=""
-    ).treescope_part
+    part = integer_digitbox(shard_offset_values[shard_offsets]).treescope_part
     assert isinstance(part, arrayviz_impl.ArrayvizDigitboxRendering)
     html_srcs.append(f"  {part.html_src} {label}")
   html_srcs.append("</span>")
@@ -1001,18 +1000,13 @@ def render_array_sharding(
 
 
 def integer_digitbox(
-    value: int,
-    label_top: str = "",
-    label_bottom: str | None = None,
-    size: str = "1em",
+    value: int, *, label: str | None = None, size: str = "1em"
 ) -> figures_impl.TreescopeFigure:
   """Returns a "digitbox" rendering of a single integer.
 
   Args:
     value: Integer value to render.
-    label_top: Label to draw on top of the digitbox.
-    label_bottom: Label to draw below the digitbox. If omitted, defaults to
-      str(value).
+    label: Optional label to draw next to the digitbox.
     size: Size for the rendering as a CSS length. "1em" means render it at the
       current font size.
 
@@ -1021,14 +1015,7 @@ def integer_digitbox(
   """
   value = int(value)
 
-  if label_bottom is None:
-    label_bottom = str(value)
-
-  render_args = json.dumps({
-      "value": value,
-      "labelTop": label_top,
-      "labelBottom": label_bottom,
-  })
+  render_args = json.dumps({"value": value})
   size_attr = html_escaping.escape_html_attribute(size)
   # Note: We need to save the parent of the treescope-run-here element first,
   # because it will be removed before the runSoon callback executes.
@@ -1043,77 +1030,15 @@ def integer_digitbox(
       "</script></treescope-run-here>"
       "</span>"
   )
-  return figures_impl.TreescopeFigure(
-      arrayviz_impl.ArrayvizDigitboxRendering(src)
-  )
-
-
-def text_on_color(
-    text: str,
-    value: float,
-    vmax: float = 1.0,
-    vmin: float | None = None,
-    colormap: list[tuple[int, int, int]] | None = None,
-) -> figures_impl.TreescopeFigure:
-  """Renders some text on colored background, similar to arrayviz coloring.
-
-  Args:
-    text: Text to display.
-    value: Value to color the background with.
-    vmax: Maximum value for the colormap.
-    vmin: Minimum value for the colormap. Defaults to ``-vmax``.
-    colormap: Explicit colormap to use. If not provided, uses the default
-      diverging colormap if ``vmin`` is not provided, or the default sequential
-      colormap if ``vmin`` is provided.
-
-  Returns:
-    A rendering of this word, formatted similarly to how this value would be
-    formatted in an array visualization.
-  """
-  if colormap is None:
-    if vmin is None:
-      colormap = default_diverging_colormap.get()
-    else:
-      colormap = default_sequential_colormap.get()
-
-  if vmin is None:
-    vmin = -vmax
-
-  if value > vmax:
-    is_out_of_bounds = True
-    color = colormap[-1]
-  elif value < vmin:
-    is_out_of_bounds = True
-    color = colormap[0]
+  rendering = arrayviz_impl.ArrayvizDigitboxRendering(src)
+  if label:
+    return figures_impl.TreescopeFigure(
+        basic_parts.siblings(
+            rendering,
+            common_styles.custom_style(
+                basic_parts.text(f" {label}"), "color:gray; font-size: 0.5em"
+            ),
+        )
+    )
   else:
-    is_out_of_bounds = False
-    relative = (value - vmin) / (vmax - vmin)
-    continuous_index = relative * (len(colormap) - 1)
-    base_index = int(np.floor(continuous_index))
-    offset = continuous_index - base_index
-    if base_index == len(colormap) - 1:
-      base_index -= 1
-      offset = 1
-    assert base_index < len(colormap) - 1
-    color = [
-        v0 * (1 - offset) + v1 * offset
-        for v0, v1 in zip(colormap[base_index], colormap[base_index + 1])
-    ]
-
-  r, g, b = color
-  # Logic matches `contrasting_style_string` in arrayviz.js
-  # https://en.wikipedia.org/wiki/Grayscale#Colorimetric_(perceptual_luminance-preserving)_conversion_to_grayscale
-  intensity = 0.2126 * r + 0.7152 * g + 0.0722 * b
-  if intensity > 128:
-    text_color = "black"
-  else:
-    text_color = "white"
-  return figures_impl.TreescopeFigure(
-      arrayviz_impl.ValueColoredTextbox(
-          child=rendering_parts.text(text),
-          text_color=text_color,
-          background_color=f"rgb({r} {g} {b})",
-          out_of_bounds=is_out_of_bounds,
-          value=value,
-      )
-  )
+    return figures_impl.TreescopeFigure(rendering)

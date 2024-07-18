@@ -21,7 +21,7 @@ from typing import Any, Callable, Optional, Sequence
 
 from treescope import dataclass_util
 from treescope import layout_algorithms
-from treescope import renderer
+from treescope import renderers
 from treescope._internal.parts import basic_parts
 from treescope._internal.parts import common_structures
 from treescope._internal.parts import common_styles
@@ -35,7 +35,7 @@ HtmlContextForSetup = part_interface.HtmlContextForSetup
 def build_field_children(
     node: Any,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
     fields_or_attribute_names: Sequence[dataclasses.Field[Any] | str],
     attr_style_fn: (
         Callable[[str], part_interface.RenderableTreePart] | None

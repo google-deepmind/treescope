@@ -19,10 +19,7 @@ from absl.testing import parameterized
 import jax.numpy as jnp
 import numpy as np
 import torch
-from treescope import array_autovisualizer
-from treescope import arrayviz
-from treescope import autovisualize
-from treescope import default_renderer
+import treescope
 from treescope import ndarray_adapters
 from treescope import type_registries
 
@@ -182,24 +179,24 @@ class NdarrayAdaptersTest(parameterized.TestCase):
       raise ValueError(f"Unsupported array_type: {array_type}")
 
     with self.subTest("explicit_unmasked"):
-      res = arrayviz.render_array(array)
+      res = treescope.render_array(array)
       self.assertTrue(hasattr(res, "_repr_html_"))
 
     with self.subTest("explicit_masked"):
-      res = arrayviz.render_array(array, valid_mask=array > 100)
+      res = treescope.render_array(array, valid_mask=array > 100)
       self.assertTrue(hasattr(res, "_repr_html_"))
 
     with self.subTest("explicit_masked_truncated"):
-      res = arrayviz.render_array(
+      res = treescope.render_array(
           array, valid_mask=array > 100, truncate=True, maximum_size=100
       )
       self.assertTrue(hasattr(res, "_repr_html_"))
 
     with self.subTest("automatic"):
-      with autovisualize.active_autovisualizer.set_scoped(
-          array_autovisualizer.ArrayAutovisualizer()
+      with treescope.active_autovisualizer.set_scoped(
+          treescope.ArrayAutovisualizer()
       ):
-        res = default_renderer.render_to_html(
+        res = treescope.render_to_html(
             array, ignore_exceptions=False, compressed=False
         )
         self.assertIsInstance(res, str)

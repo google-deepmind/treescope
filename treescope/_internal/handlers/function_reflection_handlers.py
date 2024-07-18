@@ -26,7 +26,7 @@ import io
 import re
 from typing import Any
 
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope._internal import html_escaping
 
@@ -65,7 +65,7 @@ def format_source_location(
 def handle_code_objects_with_reflection(
     node: Any,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
     show_closure_vars: bool = False,
 ) -> (
     rendering_parts.RenderableTreePart

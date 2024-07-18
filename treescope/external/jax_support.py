@@ -25,7 +25,7 @@ from treescope import context
 from treescope import dtype_util
 from treescope import lowering
 from treescope import ndarray_adapters
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope import repr_lib
 from treescope import type_registries
@@ -290,7 +290,7 @@ def faster_array_repr(array: jax.Array) -> str:
 def render_shape_dtype_struct(
     node: jax.ShapeDtypeStruct,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -327,7 +327,7 @@ def render_shape_dtype_struct(
 def render_precision(
     node: jax.lax.Precision,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -491,7 +491,7 @@ class JAXArrayAdapter(ndarray_adapters.NDArrayAdapter[jax.Array]):
 def render_jax_arrays(
     node: jax.Array,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

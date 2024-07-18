@@ -24,7 +24,7 @@ import io
 from typing import Any, Optional, Sequence
 
 from treescope import context
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope import type_registries
 from treescope._internal import html_escaping
@@ -274,7 +274,7 @@ def _is_safe_to_share(node: Any) -> bool:
 def check_for_shared_values(
     node: Any,
     path: str | None,
-    node_renderer: renderer.TreescopeSubtreeRenderer,
+    node_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

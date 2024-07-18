@@ -22,7 +22,7 @@ from treescope import canonical_aliases
 from treescope import dtype_util
 from treescope import lowering
 from treescope import ndarray_adapters
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope import type_registries
 
@@ -199,7 +199,7 @@ class NumpyArrayAdapter(ndarray_adapters.NDArrayAdapter[np.ndarray]):
 def render_ndarrays(
     node: np.ndarray,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations
@@ -269,7 +269,7 @@ def render_ndarrays(
 def render_dtype_instances(
     node: Any,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

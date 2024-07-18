@@ -51,8 +51,8 @@ class IPythonVisualization:
 
 
 @dataclasses.dataclass
-class CustomTreescopeVisualization:
-  """Used by autovisualizers to directly insert Treescope content.
+class VisualizationFromTreescopePart:
+  """Used by advanced autovisualizers to directly insert Treescope content.
 
   Attributes:
     rendering: A custom treescope rendering which will completely replace the
@@ -100,7 +100,7 @@ class Autovisualizer(Protocol):
       self, value: Any, path: str | None
   ) -> (
       IPythonVisualization
-      | CustomTreescopeVisualization
+      | VisualizationFromTreescopePart
       | ChildAutovisualizer
       | None
   ):

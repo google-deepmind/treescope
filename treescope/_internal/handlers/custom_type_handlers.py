@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from treescope import renderer
+from treescope import renderers
 from treescope import rendering_parts
 from treescope import type_registries
 from treescope._internal import object_inspection
@@ -27,7 +27,7 @@ from treescope._internal import object_inspection
 def handle_via_treescope_repr_method(
     node: Any,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
     *,
     method_name: str = "__treescope_repr__",
 ) -> (
@@ -74,7 +74,7 @@ def handle_via_treescope_repr_method(
 def handle_via_global_registry(
     node: Any,
     path: str | None,
-    subtree_renderer: renderer.TreescopeSubtreeRenderer,
+    subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> (
     rendering_parts.RenderableTreePart
     | rendering_parts.RenderableAndLineAnnotations

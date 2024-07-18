@@ -1,0 +1,77 @@
+[project]
+# Project metadata. Available keys are documented at:
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata
+name = "treescope"
+description = "Treescope: An interactive HTML pretty-printer for ML research in IPython notebooks."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "The Treescope Authors", email="treescope-dev@google.com"}]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Science/Research",
+]
+keywords = []
+
+# Pip dependencies of the project.
+dependencies = [
+    "numpy>=1.25.2"
+]
+
+# This is set automatically by flit using `treescope.__version__`
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://github.com/google-deepmind/treescope"
+repository = "https://github.com/google-deepmind/treescope"
+
+[project.optional-dependencies]
+# Dependencies required for running tests.
+test = [
+    "absl-py>=1.4.0",
+    "jax>=0.4.23",
+    "pytest>=8.2.2",
+    "torch>=2.0.0",
+]
+# Extra dependencies for some notebook demos.
+notebook = [
+    "ipython",
+    "palettable",
+    "jax>=0.4.23",
+]
+# Development deps (linting, formating,...)
+# Installed through `pip install .[dev]`
+dev = [
+    "pylint>=2.6.0",
+    "pyink>=24.3.0",
+    "ipython",
+    "jupyter",
+]
+# Requirements for building documentation.
+docs = [
+    "ipython",
+    "sphinx>=6.0.0,<7.3.0",
+    "sphinx-book-theme>=1.0.1",
+    "sphinxcontrib-katex",
+    "ipython>=8.8.0",
+    "myst-nb>=1.0.0",
+    "myst-parser>=3.0.1",
+    "matplotlib>=3.5.0",
+    "sphinx-collections>=0.0.1",
+    "sphinx_contributors",
+    "sphinx-hoverxref",
+    "jax[cpu]>=0.4.23",
+]
+
+[tool.pyink]
+# Formatting configuration to follow Google style-guide
+line-length = 80
+unstable = true
+pyink-indentation = 2
+pyink-use-majority-quotes = true
+
+[build-system]
+requires = ["flit_core >=3.8,<4"]
+build-backend = "flit_core.buildapi"
