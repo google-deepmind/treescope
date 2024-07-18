@@ -40,6 +40,9 @@ def use_autovisualizer_if_present(
 ):
   """Treescope wrapper hook that runs the active autovisualizer."""
   autoviz = autovisualize.active_autovisualizer.get()
+  if autoviz is None:
+    return NotImplemented
+
   result = autoviz(node, path)
   if result is None:
     # Continue as normal.

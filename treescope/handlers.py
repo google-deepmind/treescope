@@ -50,3 +50,17 @@ from treescope._internal.handlers.shared_value_postprocessor import (
     check_for_shared_values,
     setup_shared_value_context,
 )
+
+__all__ = [
+    "use_autovisualizer_if_present",
+    "handle_basic_types",
+    "replace_with_canonical_aliases",
+    "handle_via_global_registry",
+    "handle_via_treescope_repr_method",
+    "handle_code_objects_with_reflection",
+    "handle_arbitrary_pytrees",
+    "handle_anything_with_repr",
+    "append_repr_html_when_present",
+    "check_for_shared_values",
+    "setup_shared_value_context",
+]

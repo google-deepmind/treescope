@@ -257,11 +257,7 @@ default_magic_autovisualizer: context.ContextualValue[
     qualname="default_magic_autovisualizer",
     initial_value=array_autovisualizer.ArrayAutovisualizer(),
 )
-"""The default autovisualizer to use for the ``%%autovisualize`` magic.
 
-This can be overridden interactively to customize the autovisualizer
-used by ``%%autovisualize``.
-"""
 
 if IPython is not None:
 

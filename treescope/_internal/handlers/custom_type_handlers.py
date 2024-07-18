@@ -35,20 +35,16 @@ def handle_via_treescope_repr_method(
     | rendering_parts.RenderableAndLineAnnotations
     | type(NotImplemented)
 ):
-  """Renders a type by calling its __treescope_repr__ method, if it exists.
+  """Renders a type by calling its ``__treescope_repr__`` method, if it exists.
 
-  The __treescope_repr__ method can be used to add treescope support to custom
-  classes. The method is expected to return a rendering in treescope's internal
-  intermediate representation.
+  The ``__treescope_repr__`` method can be used to add treescope support to
+  custom classes. The method is expected to return a rendering in treescope's
+  internal intermediate representation.
 
-  Currently, the exact structure of the intermediate representation is an
-  implementation detail and may change in future releases. Instead of building
-  a rendering directly, most types should use the construction helpers in
-  `penzai.treescope.repr_lib` to implement this method.
-
-  A useful pattern is to only import `penzai.treescope` inside
-  `__treescope_repr__`. This allows a library to support treescope without
-  requiring treescope to be a direct dependency of the library.
+  The exact structure of the intermediate representation is an
+  implementation detail and may change in future releases. Users should instead
+  build a rendering using the high-level helpers in `treescope.repr_lib`, or
+  the lower-level definitions in `treescope.rendering_parts`.
 
   Args:
     node: The node to render.
@@ -86,10 +82,10 @@ def handle_via_global_registry(
   instead be registered in the global handler registry. This is a dictionary
   mapping types to functions that render a node of that type.
 
-  Currently, the exact structure of the intermediate representation is an
-  implementation detail and may change in future releases. Instead of building
-  a rendering directly, most types should use the construction helpers in
-  `penzai.treescope.repr_lib` to implement this method.
+  The exact structure of the intermediate representation is an
+  implementation detail and may change in future releases. Users should instead
+  build a rendering using the high-level helpers in `treescope.repr_lib`, or
+  the lower-level definitions in `treescope.rendering_parts`.
 
   Args:
     node: The node to render.

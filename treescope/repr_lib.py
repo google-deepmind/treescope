@@ -70,7 +70,7 @@ def render_object_constructor(
       and not some other attributes of the object.
     color: The background color to use for the object rendering. If None, does
       not use a background color. A utility for assigning a random color based
-      on a string key is given in `penzai.treescope.formatting_util`.
+      on a string key is given in `treescope.formatting_util`.
 
   Returns:
     A rendering of the object, suitable for returning from `__treescope_repr__`.

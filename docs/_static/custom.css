@@ -1,0 +1,59 @@
+.cell_output .output.text_html, .glued-cell-output .output.text_html {
+  background-color: white;
+  line-height: 1.24;
+}
+
+.glued-cell-output.max-height-20em iframe.cell_output_frame {
+  max-height: 20em;
+}
+
+iframe.cell_output_frame {
+  width: 100%;
+  border: 1px solid #7f7f7f2e;
+  width: 100%;
+  min-width: 100%;
+  max-height: 50em;
+  overflow: scroll;
+  background-color: white;
+  position: relative;
+}
+
+html {
+  scroll-behavior: auto !important;
+}
+
+.title.logo__title {
+  font-family:monospace;
+}
+.title.logo__title::before {
+  color: #cccccc;
+  position: relative;
+  left: -0.75ch;
+  content: '▼';
+}
+
+html[data-theme=light], html[data-theme=dark] {
+  --pst-color-inline-code: var(--pst-color-text-base) !important;
+}
+
+@media (min-width: 992px) {
+  .bd-page-width {
+      max-width: 100% !important;
+  }
+  .bd-sidebar-primary {
+      flex-basis: calc(min(20%, 25em)) !important;
+  }
+}
+
+html[data-theme="light"] .highlight .gd {
+  color: #A00000 !important;
+}
+html[data-theme="light"] .highlight .gi {
+  color: #008400 !important;
+}
+html[data-theme="dark"] .highlight .gd {
+  color: #fe7b6e !important;
+}
+html[data-theme="dark"] .highlight .gi {
+  color: #56d364 !important;
+}

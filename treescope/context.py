@@ -19,6 +19,7 @@ import contextlib
 import dataclasses
 from typing import Generic, TypeVar
 
+from treescope._internal import docs_util
 
 T = TypeVar("T")
 
@@ -163,6 +164,7 @@ class ContextualValue(Generic[T]):
     """
     self._raw_global_value = new_value
 
+  @docs_util.skip_automatic_documentation
   def set_interactive(self, new_value: T) -> None:
     """Alias for `set_globally`, for consistency with older Penzai API.
 

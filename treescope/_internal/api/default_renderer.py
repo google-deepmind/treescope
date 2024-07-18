@@ -69,18 +69,7 @@ active_renderer: context.ContextualValue[renderers.TreescopeRenderer] = (
         ),
     )
 )
-"""The default renderer to use when rendering a tree to HTML.
 
-This determines the set of handlers and postprocessors to use when
-rendering an object.
-
-This can be overridden locally to reconfigure how nodes are rendered
-with treescope. Users are free to set this to an arbitrary renderer of
-their choice, and programs should not assume the renderer has a
-particular form. Library functions can retrieve the current value of
-this to render objects in a user-configurable way, and can optionally
-make further adjustments using `TreescopeRenderer.extend_with`.
-"""
 
 active_expansion_strategy = context.ContextualValue[
     Callable[[rendering_parts.RenderableTreePart], None]
@@ -89,12 +78,6 @@ active_expansion_strategy = context.ContextualValue[
     qualname="active_expansion_strategy",
     initial_value=layout_algorithms.expand_for_balanced_layout,
 )
-"""The default expansion strategy to use when rendering a tree to HTML.
-
-Expansion strategies are used to figure out how deeply to unfold an object
-by default. They should operate by setting the expand states of the
-foldable nodes inside the object.
-"""
 
 
 def using_expansion_strategy(

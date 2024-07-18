@@ -196,27 +196,28 @@ class NDArrayAdapter(abc.ABC, Generic[T]):
     Args:
       array: The array to get data for.
       mask: An optional mask array provided by the user, which should be
-        broadcast-compatible with `array`. (If it is not compatible, the user
+        broadcast-compatible with ``array``. (If it is not compatible, the user
         has provided an invalid mask, and this method should raise an
         informative exception.) Can be None if no mask is provided.
       edge_items_per_axis: A tuple with one entry for each axis in the array.
         Each entry is either the number of items to keep on each side of this
         axis, or None to keep all items. The ordering will be consistent with
         the axis order returned by `get_axis_info_for_array_data`, i.e. the
-        `k`th entry in `edge_items` corresponds to the `k`th entry in the axis
+        entry ``k`` in ``edge_items`` corresponds to the entry ``k`` in the axis
         info tuple, regardless of the logical indices or axis names.
 
     Returns:
       A tuple ``(truncated_data, truncated_mask)``. ``truncated_data`` should be
-      a numpy array with a truncated version of the given array's data. If the
-      ``k``th entry in ``edge_items`` is ``None``, the ``k``th axis should have
-      the same size as the ``size`` field of the ``k``th entry returned by
-      ``get_axis_info_for_array_data``. If the ``k``th entry in ``edge_items``
-      is not ``None``, the ``k``th axis should have a size of ``edge_items[k] *
-      2 + 1``, and the middle element can be arbitrary. ``truncated_mask``
-      should be a numpy array with the same shape as ``truncated_data``
-      containing a truncated, broadcasted version of the mask; the middle
-      element of the mask must be ``False`` for each truncated axis.
+      a numpy array with a truncated version of the given array's data. If
+      entry ``k`` in ``edge_items`` is ``None``, axis ``k`` should have
+      the same size as the ``size`` field of the entry ``k`` returned by
+      ``get_axis_info_for_array_data``. If entry ``k`` in ``edge_items``
+      is not ``None``, axis ``k`` should have a size of
+      ``edge_items[k] * 2 + 1``, and the middle element can be arbitrary.
+      ``truncated_mask`` should be a numpy array with the same shape as
+      ``truncated_data`` containing a truncated, broadcasted version of the
+      mask; the middle element of the mask must be ``False`` for each truncated
+      axis.
     """
     raise NotImplementedError(
         "Subclasses must override `get_array_data_with_truncation`."

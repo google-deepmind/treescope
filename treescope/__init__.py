@@ -29,11 +29,13 @@ or, for more control: ::
 You can also pretty-print individual values using `treescope.show` or
 `treescope.display`.
 """
-
-__version__ = '0.1.0.dev0'
+from __future__ import annotations
 
 # pylint: disable=g-importing-member,g-multiple-import,unused-import
 
+import typing
+
+from . import _internal
 from . import canonical_aliases
 from . import context
 from . import dataclass_util
@@ -81,6 +83,78 @@ from ._internal.api.ipython_integration import (
     show,
 )
 
+if typing.TYPE_CHECKING:
+  Callable = typing.Callable
+
+# Type annotations and docstrings for imported constants. Used by sphinx to
+# generate documentation.
+
+default_diverging_colormap: context.ContextualValue[
+    list[tuple[int, int, int]]
+] = default_diverging_colormap
+"""Default diverging colormap.
+
+Used by `render_array` when ``around_zero`` is True. Intended for user
+customization in an interactive setting.
+"""
+
+default_sequential_colormap: context.ContextualValue[
+    list[tuple[int, int, int]]
+] = default_sequential_colormap
+"""Default sequential colormap.
+
+Used by `render_array` when ``around_zero`` is False. Intended for user
+customization in an interactive setting.
+"""
+
+active_autovisualizer: context.ContextualValue[Autovisualizer | None] = (
+    active_autovisualizer
+)
+"""The active autovisualizer to use when rendering a tree to HTML.
+
+This can be overridden interactively to enable rich visualizations in
+treescope. Users are free to set this to an arbitrary renderer of their
+choice; a common choice is arrayviz's `ArrayAutovisualizer()`.
+"""
+
+active_renderer: context.ContextualValue[renderers.TreescopeRenderer] = (
+    active_renderer
+)
+"""The default renderer to use when rendering a tree to HTML.
+
+This determines the set of handlers and postprocessors to use when
+rendering an object.
+
+This can be overridden locally to reconfigure how nodes are rendered
+with treescope. Users are free to set this to an arbitrary renderer of
+their choice, and programs should not assume the renderer has a
+particular form. Library functions can retrieve the current value of
+this to render objects in a user-configurable way, and can optionally
+make further adjustments using `TreescopeRenderer.extend_with`.
+"""
+
+active_expansion_strategy: context.ContextualValue[
+    Callable[[rendering_parts.RenderableTreePart], None]
+] = active_expansion_strategy
+"""The default expansion strategy to use when rendering a tree to HTML.
+
+Expansion strategies are used to figure out how deeply to unfold an object
+by default. They should operate by setting the expand states of the
+foldable nodes inside the object.
+"""
+
+# Package version.
+__version__ = '0.1.0.dev0'
+
+default_magic_autovisualizer: context.ContextualValue[Autovisualizer] = (
+    default_magic_autovisualizer
+)
+"""The default autovisualizer to use for the ``%%autovisualize`` magic.
+
+This can be overridden interactively to customize the autovisualizer
+used by ``%%autovisualize``.
+"""
+
 
 # Set up canonical aliases for the treescope API itself.
 def _setup_canonical_aliases_for_api():
@@ -94,4 +168,4 @@ def _setup_canonical_aliases_for_api():
 
 
 _setup_canonical_aliases_for_api()
-del _setup_canonical_aliases_for_api
+del _setup_canonical_aliases_for_api, typing

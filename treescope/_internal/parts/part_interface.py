@@ -22,6 +22,8 @@ import functools
 import io
 from typing import Any, Sequence, TypeAlias
 
+from treescope._internal import docs_util
+
 ################################################################################
 # Common structure types
 ################################################################################
@@ -96,6 +98,7 @@ class RenderableTreePart(abc.ABC):
   - and rendering themselves to HTML or text form.
   """
 
+  @docs_util.skip_automatic_documentation
   @functools.cached_property
   def collapsed_width(self) -> int:
     """The length of this rendering if collapsed in one line, in characters.
@@ -106,11 +109,13 @@ class RenderableTreePart(abc.ABC):
     """
     return self._compute_collapsed_width()
 
+  @docs_util.skip_automatic_documentation
   @abc.abstractmethod
   def _compute_collapsed_width(self) -> int:
     """Computes a value for `collapsed_width`."""
     raise NotImplementedError("_compute_collapsed_width must be overridden")
 
+  @docs_util.skip_automatic_documentation
   @functools.cached_property
   def newlines_in_expanded_parent(self) -> int:
     """The number of newlines in this rendering if in an expanded parent.
@@ -132,6 +137,7 @@ class RenderableTreePart(abc.ABC):
     """
     return self._compute_newlines_in_expanded_parent()
 
+  @docs_util.skip_automatic_documentation
   @abc.abstractmethod
   def _compute_newlines_in_expanded_parent(self) -> int:
     """Computes a value for `newlines_in_expanded_parent`."""
@@ -139,6 +145,7 @@ class RenderableTreePart(abc.ABC):
         "_compute_newlines_in_expanded_parent must be overridden"
     )
 
+  @docs_util.skip_automatic_documentation
   @functools.cached_property
   def layout_marks_in_this_part(self) -> frozenset[Any]:
     """Returns a set of "layout mark" objects contained in this part.
@@ -153,6 +160,7 @@ class RenderableTreePart(abc.ABC):
     """
     return self._compute_layout_marks_in_this_part()
 
+  @docs_util.skip_automatic_documentation
   @abc.abstractmethod
   def _compute_layout_marks_in_this_part(self) -> frozenset[Any]:
     """Computes a value for `layout_marks_in_this_part`."""
@@ -160,6 +168,7 @@ class RenderableTreePart(abc.ABC):
         "_compute_layout_marks_in_this_part must be overridden"
     )
 
+  @docs_util.skip_automatic_documentation
   @abc.abstractmethod
   def foldables_in_this_part(self) -> Sequence[FoldableTreeNode]:
     """Returns a collection of foldables contained in this node.
@@ -174,6 +183,7 @@ class RenderableTreePart(abc.ABC):
     """
     raise NotImplementedError("foldables_in_this_part must be overridden")
 
+  @docs_util.skip_automatic_documentation
   @abc.abstractmethod
   def html_setup_parts(
       self,
@@ -195,6 +205,7 @@ class RenderableTreePart(abc.ABC):
     """
     raise NotImplementedError("html_setup_parts must be overridden")
 
+  @docs_util.skip_automatic_documentation
   @abc.abstractmethod
   def render_to_html(
       self,
@@ -225,6 +236,7 @@ class RenderableTreePart(abc.ABC):
     """
     raise NotImplementedError("render_to_html must be overridden")
 
+  @docs_util.skip_automatic_documentation
   @abc.abstractmethod
   def render_to_text(
       self,

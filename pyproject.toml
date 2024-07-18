@@ -56,13 +56,17 @@ docs = [
     "sphinx-book-theme>=1.0.1",
     "sphinxcontrib-katex",
     "ipython>=8.8.0",
+    "jax[cpu]>=0.4.23",
     "myst-nb>=1.0.0",
     "myst-parser>=3.0.1",
     "matplotlib>=3.5.0",
-    "sphinx-collections>=0.0.1",
+    "palettable==3.3.3",
+    "pandas==2.2.2",
+    "plotly==5.22.0",
+    "penzai~=0.1.4",
     "sphinx_contributors",
     "sphinx-hoverxref",
-    "jax[cpu]>=0.4.23",
+    "torch==2.3.1",
 ]
 
 [tool.pyink]

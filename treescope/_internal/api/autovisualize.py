@@ -119,16 +119,10 @@ class Autovisualizer(Protocol):
     raise NotImplementedError()
 
 
-active_autovisualizer: context.ContextualValue[Autovisualizer] = (
+active_autovisualizer: context.ContextualValue[Autovisualizer | None] = (
     context.ContextualValue(
         module=__name__,
         qualname="active_autovisualizer",
-        initial_value=(lambda value, path: None),
+        initial_value=None,
     )
 )
-"""The active autovisualizer to use when rendering a tree to HTML.
-
-This can be overridden interactively to enable rich visualizations in
-treescope. Users are free to set this to an arbitrary renderer of their
-choice; a common choice is arrayviz's `ArrayAutovisualizer()`.
-"""

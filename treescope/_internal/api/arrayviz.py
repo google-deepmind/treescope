@@ -76,11 +76,6 @@ default_sequential_colormap: context.ContextualValue[
         (253, 231, 37),
     ],
 )
-"""Default sequential colormap.
-
-Used by `render_array` when ``around_zero`` is False. Intended for user
-customization in an interactive setting.
-"""
 
 default_diverging_colormap: context.ContextualValue[
     list[tuple[int, int, int]]
@@ -108,11 +103,6 @@ default_diverging_colormap: context.ContextualValue[
         (37, 47, 111),
     ],
 )
-"""Default diverging colormap.
-
-Used by `render_array` when around_zero is True. Intended for user
-customization in an interactive setting.
-"""
 
 
 def render_array(
