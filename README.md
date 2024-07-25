@@ -44,6 +44,9 @@ This is an interactive visualization; try clicking the `▶` buttons to expand
 parts of the output! (You can also hold shift while scrolling to
 scroll horizontally instead of vertically.)
 
+Documentation on Treescope can be found at
+[https://treescope.readthedocs.io](https://treescope.readthedocs.io).
+
 
 ## Getting Started
 
@@ -85,6 +88,8 @@ treescope.basic_interactive_setup(autovisualize_arrays=True)
 Once you've rendered an object, try clicking on it and pressing the `r` key!
 This turns on "roundtrip mode", and adds qualified names to every type in the
 visualization, making it easier to identify what the types in your object are.
+
+For more information on how to use Treescope, check out the [Treescope documentation](https://treescope.readthedocs.io).
 
 Looking for a neural network library with first-class support for Treescope's
 visualization features?

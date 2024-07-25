@@ -144,7 +144,7 @@ foldable nodes inside the object.
 """
 
 # Package version.
-__version__ = '0.1.0.dev0'
+__version__ = '0.1.0'
 
 default_magic_autovisualizer: context.ContextualValue[Autovisualizer] = (
     default_magic_autovisualizer
