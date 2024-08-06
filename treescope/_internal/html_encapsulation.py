@@ -142,7 +142,7 @@ const root = (
 )[0];
 root.dataset.setup = 1;
 const msg = document.createElement("span");
-msg.style = "color: #aaaaaa; font-family: monospace; transition: opacity 0.2s; opacity: 0.0;";
+msg.style = "color: #cccccc; font-family: monospace;";
 msg.textContent = "(Loading...)";
 root.state.loadingMsg = msg;
 root.shadowRoot.appendChild(msg);
@@ -157,9 +157,6 @@ root.state.chain = new Promise((resolve, reject) => {
     }
   }, {rootMargin: "1000px"});
   window.setTimeout(() => {
-    if (root.loadingMsg) {
-      root.loadingMsg.style.opacity = "1.0";
-    }
     observer.observe(root);
   }, 0);
 });
