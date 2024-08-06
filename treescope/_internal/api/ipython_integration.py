@@ -23,7 +23,7 @@ from treescope import lowering
 from treescope import rendering_parts
 from treescope._internal import object_inspection
 from treescope._internal.api import array_autovisualizer
-from treescope._internal.api import autovisualize
+from treescope._internal.api import autovisualize as autovisualize_lib
 from treescope._internal.api import default_renderer
 
 # pylint: disable=g-import-not-at-top
@@ -37,39 +37,141 @@ else:
 # pylint: enable=g-import-not-at-top
 
 
+default_magic_autovisualizer: context.ContextualValue[
+    autovisualize_lib.Autovisualizer
+] = context.ContextualValue(
+    module=__name__,
+    qualname="default_magic_autovisualizer",
+    initial_value=array_autovisualizer.ArrayAutovisualizer(),
+)
+
+
+def _display_and_maybe_steal(
+    value: Any,
+    ignore_exceptions: bool,
+    roundtrip_mode: bool,
+    streaming: bool,
+    compress_html: bool,
+    stealable: bool,
+) -> str | None:
+  """Helper to display a value, possibly with streaming and output stealing.
+
+  Args:
+    value: Value to display.
+    ignore_exceptions: Whether to ignore exceptions during rendering.
+    roundtrip_mode: Whether to start in roundtrip mode.
+    streaming: Whether to render in streaming mode.
+    compress_html: Whether to compress the HTML.
+    stealable: Whether to return an HTML snippet that can be used to steal the
+      output if it is already displayed.
+
+  Returns:
+    If `stealable` is True, returns an HTML snippet that can be used to steal
+    the output if it is already displayed. Otherwise, returns None.
+  """
+  assert IPython is not None
+  with contextlib.ExitStack() as stack:
+    if streaming:
+      deferreds = stack.enter_context(lowering.collecting_deferred_renderings())
+    else:
+      deferreds = []
+
+    root_repr_method = object_inspection.safely_get_real_method(
+        value, "__treescope_root_repr__"
+    )
+    if root_repr_method:
+      foldable_ir = root_repr_method()
+    else:
+      foldable_ir = rendering_parts.build_full_line_with_annotations(
+          default_renderer.build_foldable_representation(
+              value, ignore_exceptions=ignore_exceptions
+          )
+      )
+    if streaming:
+      return lowering.display_streaming_as_root(
+          foldable_ir,
+          deferreds,
+          roundtrip=roundtrip_mode,
+          compressed=compress_html,
+          stealable=stealable,
+      )
+    else:
+      rendering = lowering.render_to_html_as_root(
+          foldable_ir,
+          roundtrip=roundtrip_mode,
+          compressed=compress_html,
+      )
+      if stealable:
+        return rendering
+      else:
+        IPython.display.display(IPython.display.HTML(rendering))
+
+
 def display(
     value: Any,
     ignore_exceptions: bool = False,
     roundtrip_mode: bool = False,
+    autovisualize: bool | autovisualize_lib.Autovisualizer | None = None,
+    streaming: bool = True,
+    compress_html: bool = True,
 ):
   """Displays a value as an interactively foldable object.
 
   Uses the default renderer.
 
   Args:
-    value: Value to fold.
+    value: Value to display.
     ignore_exceptions: Whether to catch errors during rendering of subtrees and
       show a fallback for those subtrees.
     roundtrip_mode: Whether to start in roundtrip mode.
+    autovisualize: Optional autovisualizer override. If True, renders using the
+      default autovisualizer (usually an array autovisualizer). If False,
+      disables automatic visualization. If a function or object, uses that
+      autovisualizer. If None (the default), uses the current active
+      autovisualizer (if any) without overriding it.
+    streaming: Whether to render in streaming mode, which immediately displays
+      the structure of the output while computing more expensive leaf
+      renderings. This is useful in interactive contexts, but can mess with
+      other users of IPython's formatting because the final rendered HTML is
+      empty.
+    compress_html: Whether to zlib-compress (i.e. zip) treescope renderings to
+      reduce their size when transmitted to the browser or saved into a
+      notebook.
 
   Raises:
     RuntimeError: If IPython is not available.
   """
   if IPython is None:
     raise RuntimeError("Cannot use `display` outside of IPython.")
-  IPython.display.display(
-      IPython.display.HTML(
-          default_renderer.render_to_html(
-              value,
-              ignore_exceptions=ignore_exceptions,
-              roundtrip_mode=roundtrip_mode,
-              compressed=True,
-          ),
+  with contextlib.ExitStack() as stack:
+    if autovisualize is not None:
+      if autovisualize is True:  # pylint: disable=g-bool-id-comparison
+        tmp_autovisualizer = default_magic_autovisualizer.get()
+      elif autovisualize is False:  # pylint: disable=g-bool-id-comparison
+        tmp_autovisualizer = None
+      else:
+        tmp_autovisualizer = autovisualize
+      stack.enter_context(
+          autovisualize_lib.active_autovisualizer.set_scoped(tmp_autovisualizer)
       )
-  )
+    maybe_stolen = _display_and_maybe_steal(
+        value=value,
+        ignore_exceptions=ignore_exceptions,
+        roundtrip_mode=roundtrip_mode,
+        streaming=streaming,
+        compress_html=compress_html,
+        stealable=False,
+    )
+    # Should not get an output when `stealable=False`
+    assert maybe_stolen is None
 
 
-def show(*args, wrap: bool = False, space_separated: bool = True):
+def show(
+    *args,
+    wrap: bool = False,
+    space_separated: bool = True,
+    autovisualize: bool | autovisualize_lib.Autovisualizer | None = None,
+):
   """Shows a list of objects inline, like python print, but with rich display.
 
   Args:
@@ -79,6 +181,11 @@ def show(*args, wrap: bool = False, space_separated: bool = True):
       its IPython representation.
     wrap: Whether to wrap at the end of the line.
     space_separated: Whether to add single spaces between objects.
+    autovisualize: Optional autovisualizer override. If True, renders using the
+      default autovisualizer (usually an array autovisualizer). If False,
+      disables automatic visualization. If a function or object, uses that
+      autovisualizer. If None (the default), uses the current active
+      autovisualizer (if any) without overriding it.
 
   Raises:
     RuntimeError: If IPython is not available.
@@ -91,7 +198,18 @@ def show(*args, wrap: bool = False, space_separated: bool = True):
       separated_args.append(arg)
       separated_args.append(" ")
     args = separated_args[:-1]
-  IPython.display.display(figures.inline(*args, wrap=wrap))
+  with contextlib.ExitStack() as stack:
+    if autovisualize is not None:
+      if autovisualize is True:  # pylint: disable=g-bool-id-comparison
+        tmp_autovisualizer = default_magic_autovisualizer.get()
+      elif autovisualize is False:  # pylint: disable=g-bool-id-comparison
+        tmp_autovisualizer = None
+      else:
+        tmp_autovisualizer = autovisualize
+      stack.enter_context(
+          autovisualize_lib.active_autovisualizer.set_scoped(tmp_autovisualizer)
+      )
+    IPython.display.display(figures.inline(*args, wrap=wrap))
 
 
 def register_as_default(
@@ -161,49 +279,21 @@ def register_as_default(
       # Don't render this to HTML.
       return None
     else:
-      with contextlib.ExitStack() as stack:
-        if streaming:
-          # Render using Treescope. However, since the display_formatter is used
-          # in an interactive context, we can defer rendering of leaves that
-          # support deferral and splice them in one at a time.
-          deferreds = stack.enter_context(
-              lowering.collecting_deferred_renderings()
-          )
-        else:
-          deferreds = None
-
-        root_repr_method = object_inspection.safely_get_real_method(
-            value, "__treescope_root_repr__"
-        )
-        if root_repr_method:
-          foldable_ir = root_repr_method()
-        else:
-          foldable_ir = rendering_parts.build_full_line_with_annotations(
-              default_renderer.build_foldable_representation(
-                  value, ignore_exceptions=True
-              )
-          )
-        if streaming:
-          output_stealer = lowering.display_streaming_as_root(
-              foldable_ir,
-              deferreds,
-              roundtrip=False,
-              compressed=compress_html,
-              stealable=True,
-          )
-          # Executing the above call will have already displayed the output,
-          # but it may be in the wrong place (e.g. it may appear before the
-          # actual "Out" marker in JupyterLab). By returning `output_stealer`
-          # as the rendering of the object, we can ensure that the output is
-          # moved to the right place.
-          return output_stealer
-        else:
-          assert deferreds is None
-          return lowering.render_to_html_as_root(
-              foldable_ir,
-              roundtrip=False,
-              compressed=compress_html,
-          )
+      output_stealer = _display_and_maybe_steal(
+          value=value,
+          ignore_exceptions=True,
+          roundtrip_mode=False,
+          streaming=streaming,
+          compress_html=compress_html,
+          stealable=True,
+      )
+      # Executing the above call will have already displayed the output,
+      # but it may be in the wrong place (e.g. it may appear before the
+      # actual "Out" marker in JupyterLab). In `stealable` mode, by returning
+      # `output_stealer` as the rendering of the object, we can ensure that the
+      # output is moved to the right place.
+      assert output_stealer is not None
+      return output_stealer
 
   display_formatter = IPython.get_ipython().display_formatter
   cur_html_formatter = display_formatter.formatters["text/html"]
@@ -250,15 +340,6 @@ def register_as_default(
     pass
 
 
-default_magic_autovisualizer: context.ContextualValue[
-    autovisualize.Autovisualizer
-] = context.ContextualValue(
-    module=__name__,
-    qualname="default_magic_autovisualizer",
-    initial_value=array_autovisualizer.ArrayAutovisualizer(),
-)
-
-
 if IPython is not None:
 
   @IPython.core.magic.magics_class
@@ -270,8 +351,27 @@ if IPython is not None:
       """``%%autovisualize`` cell magic: enables autovisualization in a cell.
 
       The ``%%autovisualize`` magic is syntactic sugar for running a cell with
-      automatic visualization turned on. To use the default autovisualizer,
-      you can annotate your cell with ::
+      automatic visualization of arrays (or a different automatic visualizer).
+      This affects calls to `treescope.show` and `treescope.display` in the
+      cell, and also affects the output formatting if Treescope is set as the
+      default IPython pretty-printer.
+
+      (Note that the ``%%autovisualize`` magic only affects cell output
+      rendering if Treescope is already set as the default pretty-printer.)
+
+      Allowed options:
+
+      * ``%%autovisualize True`` or ``%%autovisualize`` with no arguments
+        activates the default autovisualizer
+        (`treescope.default_magic_autovisualizer`), which is usually an array
+        autovisualizer.
+      * ``%%autovisualize False`` or ``%%autovisualize None`` disables
+        autovisualization in this cell.
+      * ``%%autovisualize <autovisualizer_object>`` activates the given
+        autovisualizer object.
+
+      For instance, to use the default autovisualizer, you can annotate your
+      cell with ::
 
         %%autovisualize
 
@@ -289,7 +389,7 @@ if IPython is not None:
           IPython.display.display(result)
 
 
-      You can also pass an explicit autovisualizer function/object::
+      To activate an explicit autovisualizer function/object::
 
         %%autovisualize my_autovisualizer
 
@@ -305,9 +405,11 @@ if IPython is not None:
           IPython.display.display(result)
 
       Args:
-        line: Contents of the line where ``%%autovisualize`` is. Should either
-          be empty or should be (a Python expression for) an autovisualizer
-          object to use.
+        line: Contents of the ``%%autovisualize`` magic, which will be evaluated
+          as a Python object. If empty or `True`, the default autovisualizer
+          will be used. If `False` or `None`, autovisualization will be
+          disabled. Otherwise, the line should be a Python expression that
+          evaluates to an autovisualizer object.
         cell: Contents of the rest of the cell. Will be run inside the
           autovisualization scope.
       """
@@ -315,11 +417,16 @@ if IPython is not None:
         # Evaluate the line as Python code.
         autovisualizer = self.shell.ev(line)
       else:
+        autovisualizer = True
+
+      if autovisualizer is True:  # pylint: disable=g-bool-id-comparison
         # Retrieve the default autovisualizer.
         autovisualizer = default_magic_autovisualizer.get()
-      if autovisualizer is None:
-        autovisualizer = lambda value, path: None
-      with autovisualize.active_autovisualizer.set_scoped(autovisualizer):
+      elif autovisualizer is False:  # pylint: disable=g-bool-id-comparison
+        # Disable autovisualization.
+        autovisualizer = None
+
+      with autovisualize_lib.active_autovisualizer.set_scoped(autovisualizer):
         self.shell.run_cell(cell)
 
   @IPython.core.magic.magics_class
@@ -412,6 +519,6 @@ def basic_interactive_setup(autovisualize_arrays: bool = True):
   register_context_manager_magic()
 
   if autovisualize_arrays:
-    autovisualize.active_autovisualizer.set_globally(
+    autovisualize_lib.active_autovisualizer.set_globally(
         array_autovisualizer.ArrayAutovisualizer()
     )

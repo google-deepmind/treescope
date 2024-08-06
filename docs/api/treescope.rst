@@ -51,13 +51,20 @@ Automatic visualization
 Treescope supports automatic visualization of particular leaves of a tree using
 an "autovisualizer". The most common autovisualizer is the array autovizualizer,
 but you can also define your own autovisualizers using any IPython rich display
-object.
+object. (See the
+:doc:`custom visualization guide </notebooks/building_custom_visualizations>`
+for details.)
 
-To enable an autovisualizer globally, you can use ::
+To enable an autovisualizer for all Treescope outputs, you can use ::
 
   treescope.active_autovisualizer.set_globally(
       treescope.ArrayAutovisualizer()  # or your own autovisualizer
   )
+
+To enable it for a single display call, you can pass the `autovisualize`
+argument to `treescope.display` or `treescope.show`, e.g. ::
+
+  treescope.display(..., autovisualize=True)
 
 Alternatively you can use the ``%%autovisualize`` magic to turn on automatic
 visualization in a single cell, e.g. ::
@@ -68,7 +75,7 @@ visualization in a single cell, e.g. ::
 or just ::
 
   %%autovisualize
-  # ^ with no arguments, always uses the array autovisualizer
+  # ^ with no arguments, uses the default array autovisualizer
   treescope.display(...)
 
 Types for building autovisualizers:
