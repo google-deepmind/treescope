@@ -75,7 +75,8 @@ def color_from_string(
 
 
 def parse_simple_color_and_pattern_spec(
-    requested_color: str | tuple[str, str], typename_for_warning: str | None
+    requested_color: str | tuple[str, str],
+    typename_for_warning: str | None = None,
 ) -> tuple[str | None, str | None]:
   """Parses a background color and pattern from a user-provided color request.
 

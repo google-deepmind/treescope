@@ -49,7 +49,14 @@ You could be looking at this:
   .. glue:any:: treescope_after
     :doc: _include/_glue_figures.ipynb
 
-This is an interactive visualization; try clicking the `▶` buttons to expand
+Or even this:
+
+.. container:: glued-cell-output
+
+  .. glue:any:: treescope_penzai
+    :doc: _include/_glue_figures.ipynb
+
+These are interactive visualizations; try clicking the `▶` buttons to expand
 parts of the output! (You can also hold shift while scrolling to
 scroll horizontally instead of vertically.)
 

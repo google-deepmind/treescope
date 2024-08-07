@@ -63,7 +63,7 @@ docs = [
     "palettable==3.3.3",
     "pandas==2.2.2",
     "plotly==5.22.0",
-    "penzai~=0.1.4",
+    "penzai~=0.2.0",
     "sphinx_contributors",
     "sphinx-hoverxref",
     "torch==2.3.1",

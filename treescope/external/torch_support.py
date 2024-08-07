@@ -363,8 +363,11 @@ def render_torch_modules(
         )
     )
   elif type(node) is torch.nn.Sequential:  # pylint: disable=unidiomatic-typecheck
-    background_color = "#cdcdcd"
-    background_pattern = "color-mix(in oklab, #cdcdcd 25%, white)"
+    background_color, background_pattern = (
+        formatting_util.parse_simple_color_and_pattern_spec(
+            ("#cdcdcd", "color-mix(in oklab, #cdcdcd 25%, white)")
+        )
+    )
   elif type(node).forward is torch.nn.Module.forward:
     # No implementation of forward. Don't color-code; this is probably a
     # container like ModuleList or ModuleDict.
