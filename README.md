@@ -95,6 +95,20 @@ Looking for a neural network library with first-class support for Treescope's
 visualization features?
 Try [Penzai](https://penzai.readthedocs.io/en/stable)!
 
+## Citation
+
+If you have found Treescope to be useful for your research, please consider
+citing the following writeup (also avaliable on [arXiv](https://arxiv.org/abs/2408.00211)):
+
+```
+@article{johnson2024penzai,
+    author={Daniel D. Johnson},
+    title={{Penzai} + {Treescope}: A Toolkit for Interpreting, Visualizing, and Editing Models As Data},
+    year={2024},
+    journal={ICML 2024 Workshop on Mechanistic Interpretability}
+}
+```
+
 ---
 
 *This is not an officially supported Google product.*
