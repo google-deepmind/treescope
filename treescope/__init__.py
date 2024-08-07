@@ -143,9 +143,6 @@ by default. They should operate by setting the expand states of the
 foldable nodes inside the object.
 """
 
-# Package version.
-__version__ = '0.1.0'
-
 default_magic_autovisualizer: context.ContextualValue[Autovisualizer] = (
     default_magic_autovisualizer
 )
@@ -154,6 +151,9 @@ default_magic_autovisualizer: context.ContextualValue[Autovisualizer] = (
 This can be overridden interactively to customize the autovisualizer
 used by ``%%autovisualize``.
 """
+
+# Package version.
+__version__ = '0.1.1'
 
 
 # Set up canonical aliases for the treescope API itself.
