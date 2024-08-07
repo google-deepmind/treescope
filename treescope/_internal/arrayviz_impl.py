@@ -352,9 +352,7 @@ def infer_rows_and_columns(
   # so that position axes are in reverse position order, and the explicitly
   # mentioned named axes are before the unassigned ones.
   def ax_sort_key(ax: AxisInfo):
-    if isinstance(ax, PositionalAxisInfo | NamedPositionalAxisInfo):
-      return (0, -ax.axis_logical_index)
-    elif ax in unassigned:
+    if ax in unassigned:
       return (2,)
     else:
       return (1,)

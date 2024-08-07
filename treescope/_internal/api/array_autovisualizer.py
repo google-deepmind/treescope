@@ -97,12 +97,17 @@ class ArrayAutovisualizer:
     # Assign axes, using preferred axes if possible.
     row_axes = []
     column_axes = []
-    for info in array_axis_info:
-      if isinstance(info, NamedPositionalAxisInfo | NamedPositionlessAxisInfo):
-        if info.axis_name in self.prefers_column:
-          column_axes.append(info.axis_name)
-        elif info.axis_name in self.prefers_row:
-          row_axes.append(info.axis_name)
+    for column_key in self.prefers_column:
+      for info in array_axis_info:
+        if isinstance(info, NamedPositionalAxisInfo | NamedPositionlessAxisInfo | PositionalAxisInfo):
+          if info.logical_key() == column_key:
+            column_axes.append(info)
+
+    for row_key in self.prefers_row:
+      for info in array_axis_info:
+        if isinstance(info, NamedPositionalAxisInfo | NamedPositionlessAxisInfo | PositionalAxisInfo):
+          if info.logical_key() == row_key:
+            row_axes.append(info)
 
     # Infer a good truncated shape for this array.
     edge_items_per_axis = arrayviz_impl.infer_balanced_truncation(
