@@ -74,6 +74,9 @@ def _truncate_and_copy(
       ignoring any axes whose slices are already computed in `source_slices`.
   """
   assert torch is not None, "PyTorch is not available."
+  if array_source.device != torch.device("cpu"):
+    array_source = array_source.cpu()
+    
   if not remaining_edge_items_per_axis:
     # Perform the base case slice.
     assert (
@@ -133,6 +136,8 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
       edge_items_per_axis: tuple[int | None, ...],
   ) -> tuple[np.ndarray, np.ndarray]:
     assert torch is not None, "PyTorch is not available."
+    if array.device != torch.device("cpu"):
+      array = array.cpu()
     array = array.detach()
 
     if mask is None:
