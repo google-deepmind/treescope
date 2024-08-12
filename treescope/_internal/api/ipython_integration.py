@@ -264,36 +264,45 @@ def register_as_default(
         value, "_repr_html_"
     )
     if repr_html_method:
+      # Directly call the _repr_html_ method. We need to do this because if this
+      # formatter returns None, the _repr_html_ method won't be called. (The
+      # _repr_html_ method is only called if no formatter for the type is
+      # found, but this formatter will run for every type due to being
+      # registered for `object`.)
       return repr_html_method()  # pylint: disable=protected-access
-    elif isinstance(value, ipython_display.DisplayObject) or (
-        object_inspection.safely_get_real_method(value, "_repr_pretty_")
-        and not (
-            object_inspection.safely_get_real_method(
-                value, "__treescope_repr__"
-            )
-            or object_inspection.safely_get_real_method(
-                value, "__treescope_root_repr__"
-            )
-        )
-    ):
-      # Don't render this to HTML.
+
+    if isinstance(value, ipython_display.DisplayObject):
+      # Don't render this to HTML, since IPython already knows how to render it.
       return None
-    else:
-      output_stealer = _display_and_maybe_steal(
-          value=value,
-          ignore_exceptions=True,
-          roundtrip_mode=False,
-          streaming=streaming,
-          compress_html=compress_html,
-          stealable=True,
-      )
-      # Executing the above call will have already displayed the output,
-      # but it may be in the wrong place (e.g. it may appear before the
-      # actual "Out" marker in JupyterLab). In `stealable` mode, by returning
-      # `output_stealer` as the rendering of the object, we can ensure that the
-      # output is moved to the right place.
-      assert output_stealer is not None
-      return output_stealer
+
+    has_ipython_format_method = any(
+        object_inspection.safely_get_real_method(value, method_name)
+        for method_name in ("_repr_pretty_", "_repr_mimebundle_")
+    )
+    has_treescope_format_method = any(
+        object_inspection.safely_get_real_method(value, method_name)
+        for method_name in ("__treescope_repr__", "__treescope_root_repr__")
+    )
+    if has_ipython_format_method and not has_treescope_format_method:
+      # Don't render this with Treescope, because it already has a different
+      # rendering method for a non-HTML format.
+      return None
+
+    output_stealer = _display_and_maybe_steal(
+        value=value,
+        ignore_exceptions=True,
+        roundtrip_mode=False,
+        streaming=streaming,
+        compress_html=compress_html,
+        stealable=True,
+    )
+    # Executing the above call will have already displayed the output,
+    # but it may be in the wrong place (e.g. it may appear before the
+    # actual "Out" marker in JupyterLab). In `stealable` mode, by returning
+    # `output_stealer` as the rendering of the object, we can ensure that the
+    # output is moved to the right place.
+    assert output_stealer is not None
+    return output_stealer
 
   display_formatter = IPython.get_ipython().display_formatter
   cur_html_formatter = display_formatter.formatters["text/html"]
