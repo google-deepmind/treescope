@@ -129,7 +129,7 @@ Citation
 --------
 
 If you have found Treescope to be useful for your research, please consider
-citing the following writeup (also avaliable on `arXiv <https://arxiv.org/abs/2408.00211>`_):
+citing the following writeup (also available on `arXiv <https://arxiv.org/abs/2408.00211>`_):
 
 .. code-block:: none
 
