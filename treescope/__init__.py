@@ -153,7 +153,7 @@ used by ``%%autovisualize``.
 """
 
 # Package version.
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 
 # Set up canonical aliases for the treescope API itself.
