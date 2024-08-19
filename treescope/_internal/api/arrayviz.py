@@ -126,6 +126,7 @@ def render_array(
     axis_item_labels: dict[AxisName | int, list[str]] | None = None,
     value_item_labels: dict[int, str] | None = None,
     axis_labels: dict[AxisName | int, str] | None = None,
+    pixels_per_cell: int = 7,
 ) -> figures_impl.TreescopeFigure:
   """Renders an array (positional or named) to a displayable HTML object.
 
@@ -249,6 +250,11 @@ def render_array(
         should use for that axis. If not provided, we label the named axes with
         their names and the positional axes with "axis {i}", and also add th
         axis size.
+      pixels_per_cell: Size of each rendered array element in pixels, between 1
+        and 21 inclusive. This controls the zoom level of the rendering. Array
+        elements are always drawn at 7 pixels per cell and then rescaled, so
+        out-of-bounds annotations and "digitbox" integer value patterns may not
+        display correctly at fewer than 7 pixels per cell.
 
   Returns:
     An object which can be rendered in an IPython notebook, containing the
@@ -262,6 +268,11 @@ def render_array(
     raise TypeError(
         f"Cannot render array with unrecognized type {type(array)} (not found"
         " in array adapter registry)"
+    )
+  if not 1 <= pixels_per_cell <= 21:
+    raise ValueError(
+        f"pixels_per_cell must be between 1 and 21 inclusive, got"
+        f" {pixels_per_cell}"
     )
 
   # Extract information about axis names, indices, and sizes.
@@ -351,6 +362,7 @@ def render_array(
           axis_item_labels=axis_item_labels,
           value_item_labels=value_item_labels,
           axis_labels=axis_labels,
+          pixels_per_cell=pixels_per_cell,
       )
   )
 
@@ -374,6 +386,7 @@ def _render_pretruncated(
     axis_item_labels: dict[AxisName | int, list[str]] | None,
     value_item_labels: dict[int, str] | None,
     axis_labels: dict[AxisName | int, str] | None,
+    pixels_per_cell: int = 7,
 ) -> arrayviz_impl.ArrayvizRendering:
   """Internal helper to render an array that has already been truncated."""
   if axis_item_labels is None:
@@ -679,6 +692,7 @@ def _render_pretruncated(
       dynamic_continous_cmap=dynamic_colormap,
       raw_min_abs=raw_min_abs,
       raw_max_abs=raw_max_abs,
+      pixels_per_cell=pixels_per_cell,
   )
   return arrayviz_impl.ArrayvizRendering(html_src)
 

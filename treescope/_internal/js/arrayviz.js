@@ -558,6 +558,8 @@ const arrayviz = (() => {
    *  config.colormapConfig: Configuration for the rendering of individual
    *    array elements. Determines which colormap to use, and whether to render
    *    as continuous or discrete.
+   *  config.pixelsPerCell: The initial number of pixels per cell to render (and
+   *    therefore the initial value for the zoom slider).
    *  config.valueFormattingInstructions: Instructions for rendering array
    *    indices and values on mouse hover/click.
    * @param {!HTMLElement} destination The element to render into.
@@ -571,6 +573,7 @@ const arrayviz = (() => {
    *    yAxisSpecs: !Array<!AxisSpec>,
    *    slicedAxisSpecs: !Array<!AxisSpec>,
    *    colormapConfig: !ColormapConfig,
+   *    pixelsPerCell: number,
    *    valueFormattingInstructions: !Array<?>,
    * }} config Configuration for the setup.
    */
@@ -589,6 +592,7 @@ const arrayviz = (() => {
     const yAxisSpecs = config.yAxisSpecs;
     const slicedAxisSpecs = config.slicedAxisSpecs;
     const colormapConfig = config.colormapConfig;
+    const pixelsPerCell = config.pixelsPerCell;
     const valueFormattingInstructions = config.valueFormattingInstructions;
 
     // Decode the array.
@@ -1018,7 +1022,7 @@ const arrayviz = (() => {
     const zoomslider =
         /** @type {!HTMLInputElement} */ (document.createElement('input'));
     zoomslider.type = 'range';
-    zoomslider.value = '7';
+    zoomslider.value = pixelsPerCell;
     zoomslider.min = '1';
     zoomslider.max = '21';
     zoomslider.step = '1';
@@ -1204,6 +1208,7 @@ const arrayviz = (() => {
     // Draw the initial output.
     drawAllCells();
     fixMargins();
+    zoomslider.dispatchEvent(new Event('input'));
   }
 
   /**

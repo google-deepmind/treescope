@@ -142,6 +142,7 @@ def render_array_data_to_html(
     dynamic_continous_cmap: bool = False,
     raw_min_abs: float | None = None,
     raw_max_abs: float | None = None,
+    pixels_per_cell: int = 7
 ) -> str:
   """Helper to render an array to HTML by passing arguments to javascript.
 
@@ -168,6 +169,7 @@ def render_array_data_to_html(
       rendering.
     raw_min_abs: Minimum absolute value of the array, for dynamic remapping.
     raw_max_abs: Maximum absolute value of the array, for dynamic remapping.
+    pixels_per_cell: The initial number of pixels per cell when rendering.
 
   Returns:
     HTML source for an arrayviz rendering.
@@ -235,6 +237,7 @@ def render_array_data_to_html(
           "rawMaxAbs": raw_max_abs,
           "cmapData": cmap_data,
       },
+      "pixelsPerCell": pixels_per_cell,
       "valueFormattingInstructions": formatting_instructions,
   })
   # Note: We need to save the parent of the treescope-run-here element first,
