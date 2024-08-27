@@ -94,6 +94,7 @@ def _display_and_maybe_steal(
           roundtrip=roundtrip_mode,
           compressed=compress_html,
           stealable=stealable,
+          ignore_exceptions=ignore_exceptions,
       )
     else:
       rendering = lowering.render_to_html_as_root(

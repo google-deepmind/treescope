@@ -23,6 +23,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import traceback
 from typing import Any, Callable, Iterator, Sequence
 import uuid
 
@@ -162,8 +163,10 @@ def render_to_text_as_root(
     Text for the rendered node.
   """
   if strip_whitespace_lines and not strip_trailing_whitespace:
-    raise ValueError("strip_whitespace_lines must be False if "
-                     "strip_trailing_whitespace is False.")
+    raise ValueError(
+        "strip_whitespace_lines must be False if "
+        "strip_trailing_whitespace is False."
+    )
 
   stream = io.StringIO()
   root_node.render_to_text(
@@ -223,6 +226,7 @@ def _render_to_html_as_root_streaming(
     root_node: rendering_parts.RenderableTreePart,
     roundtrip: bool,
     deferreds: Sequence[foldable_impl.DeferredWithThunk],
+    ignore_exceptions: bool = False,
 ) -> Iterator[str]:
   """Helper function: renders a root node to HTML one step at a time.
 
@@ -230,6 +234,8 @@ def _render_to_html_as_root_streaming(
     root_node: The root node to render.
     roundtrip: Whether to render in roundtrip mode.
     deferreds: Sequence of deferred objects to render and splice in.
+    ignore_exceptions: Whether to ignore exceptions during deferred rendering,
+      replacing them with error markers.
 
   Yields:
     HTML source for the rendered node, followed by logic to substitute each
@@ -347,7 +353,26 @@ def _render_to_html_as_root_streaming(
           layout_decision = deferred.placeholder.child.get_expand_state()
         else:
           layout_decision = None
-        replacement_part = deferred.thunk(layout_decision)
+        try:
+          replacement_part = deferred.thunk(layout_decision)
+        except Exception as e:  # pylint: disable=broad-except
+          if not ignore_exceptions:
+            raise
+          exc_child = rendering_parts.fold_condition(
+              expanded=rendering_parts.indented_children(
+                  [rendering_parts.text(traceback.format_exc())]
+              ),
+          )
+          replacement_part = rendering_parts.error_color(
+              rendering_parts.build_custom_foldable_tree_node(
+                  label=rendering_parts.text(
+                      f"<{type(e).__name__} during deferred rendering"
+                  ),
+                  contents=rendering_parts.siblings(
+                      exc_child, rendering_parts.text(">")
+                  ),
+              ).renderable
+          )
       _render_one(
           replacement_part,
           deferred.placeholder.saved_at_beginning_of_line,
@@ -409,6 +434,7 @@ def display_streaming_as_root(
     roundtrip: bool = False,
     compressed: bool = True,
     stealable: bool = False,
+    ignore_exceptions: bool = False,
 ) -> str | None:
   """Displays a root node in an IPython notebook in a streaming fashion.
 
@@ -419,6 +445,8 @@ def display_streaming_as_root(
     compressed: Whether to compress the HTML for display.
     stealable: Whether to return an extra HTML snippet that allows the streaming
       rendering to be relocated after it is shown.
+    ignore_exceptions: Whether to ignore exceptions during deferred rendering,
+      replacing them with error markers.
 
   Returns:
     If ``stealable`` is True, a final HTML snippet which, if inserted into a
@@ -431,7 +459,7 @@ def display_streaming_as_root(
   import IPython.display  # pylint: disable=g-import-not-at-top
 
   render_iterator = _render_to_html_as_root_streaming(
-      root_node, roundtrip, deferreds
+      root_node, roundtrip, deferreds, ignore_exceptions=ignore_exceptions
   )
   encapsulated_iterator = html_encapsulation.encapsulate_streaming_html(
       render_iterator, compress=compressed, stealable=stealable

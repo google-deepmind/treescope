@@ -395,17 +395,13 @@ class TreescopeRendererTest(parameterized.TestCase):
           testcase_name="well_known_function",
           target=treescope.render_to_text,
           expected_collapsed="render_to_text",
-          expected_roundtrip_collapsed=(
-              "treescope.render_to_text"
-          ),
+          expected_roundtrip_collapsed="treescope.render_to_text",
       ),
       dict(
           testcase_name="well_known_type",
           target=treescope.IPythonVisualization,
           expected_collapsed="IPythonVisualization",
-          expected_roundtrip_collapsed=(
-              "treescope.IPythonVisualization"
-          ),
+          expected_roundtrip_collapsed="treescope.IPythonVisualization",
       ),
       dict(
           testcase_name="ast_nodes",
@@ -425,6 +421,21 @@ class TreescopeRendererTest(parameterized.TestCase):
                   keywords=[],
                 ),
               )"""),
+      ),
+      dict(
+          testcase_name="custom_handler",
+          target=[fixture_lib.ObjectWithCustomHandler()],
+          expected_collapsed=(
+              "[<ObjectWithCustomHandler custom rendering! Path: '[0]'>]"
+          ),
+      ),
+      dict(
+          testcase_name="custom_handler_that_throws",
+          target=[fixture_lib.ObjectWithCustomHandlerThatThrows()],
+          ignore_exceptions=True,
+          expected_collapsed=(
+              "[<Fallback repr for ObjectWithCustomHandlerThatThrows>]"
+          ),
       ),
       dict(
           testcase_name="dtype_standard",
@@ -533,6 +544,7 @@ class TreescopeRendererTest(parameterized.TestCase):
       expected_roundtrip: str | None = None,
       expected_roundtrip_collapsed: str | None = None,
       expand_depth: int = 1,
+      ignore_exceptions: bool = False,
   ):
     if target_builder is not None:
       assert target is None
@@ -541,7 +553,9 @@ class TreescopeRendererTest(parameterized.TestCase):
     renderer = treescope.active_renderer.get()
     # Render it to IR.
     rendering = rendering_parts.build_full_line_with_annotations(
-        renderer.to_foldable_representation(target)
+        renderer.to_foldable_representation(
+            target, ignore_exceptions=ignore_exceptions
+        )
     )
 
     # Collapse all foldables.
@@ -671,6 +685,69 @@ class TreescopeRendererTest(parameterized.TestCase):
             ]"""),
     )
 
+  def test_fallback_repr_after_error(self):
+    target = [fixture_lib.ObjectWithCustomHandlerThatThrows()]
+    renderer = treescope.active_renderer.get()
+
+    with self.assertRaisesWithLiteralMatch(
+        RuntimeError, "Simulated treescope_repr failure!"
+    ):
+      renderer.to_foldable_representation(target)
+
+    rendering = rendering_parts.build_full_line_with_annotations(
+        renderer.to_foldable_representation(target, ignore_exceptions=True)
+    )
+
+    layout_algorithms.expand_to_depth(rendering, 0)
+    self.assertEqual(
+        lowering.render_to_text_as_root(rendering),
+        "[<Fallback repr for ObjectWithCustomHandlerThatThrows>]",
+    )
+    layout_algorithms.expand_to_depth(rendering, 2)
+    self.assertEqual(
+        lowering.render_to_text_as_root(rendering),
+        textwrap.dedent(f"""\
+            [
+              <Fallback repr for ObjectWithCustomHandlerThatThrows>,  # {object.__repr__(target[0])}
+            ]"""),
+    )
+
+  def test_ignore_exceptions_in_deferred(self):
+    target = [fixture_lib.ObjectWithCustomHandlerThatThrowsDeferred()]
+    renderer = treescope.active_renderer.get()
+
+    with self.assertRaisesWithLiteralMatch(
+        RuntimeError, "Simulated deferred treescope_repr failure!"
+    ):
+      renderer.to_foldable_representation(target)
+
+    with lowering.collecting_deferred_renderings() as deferreds:
+      foldable_ir = rendering_parts.build_full_line_with_annotations(
+          renderer.to_foldable_representation(target)
+      )
+
+    # It's difficult to test the IPython wrapper so we instead test the internal
+    # helper function that produces the streaming HTML output.
+    html_parts = lowering._render_to_html_as_root_streaming(
+        root_node=foldable_ir,
+        roundtrip=False,
+        deferreds=deferreds,
+        ignore_exceptions=True,
+    )
+    self.assertContainsInOrder(
+        [
+            "[",
+            "&lt;RuntimeError during deferred rendering",
+            "Traceback",
+            "in _internal_main_thunk",
+            "raise RuntimeError",
+            "RuntimeError: Simulated deferred treescope_repr failure!",
+            "&gt;",
+            "]",
+        ],
+        "".join(html_parts),
+    )
+
   def test_fallback_repr_multiline_idiomatic(self):
     target = [fixture_lib.UnknownObjectWithMultiLineRepr()]
     renderer = treescope.active_renderer.get()
@@ -735,6 +812,33 @@ class TreescopeRendererTest(parameterized.TestCase):
         textwrap.dedent(f"""\
             [
               {repr(target[0])},
+            ]"""),
+    )
+
+  def test_failsafe_for_throw_in_repr(self):
+    target = [fixture_lib.ObjectWithReprThatThrows()]
+    renderer = treescope.active_renderer.get()
+
+    with self.assertRaisesWithLiteralMatch(
+        RuntimeError, "Simulated repr failure!"
+    ):
+      renderer.to_foldable_representation(target)
+
+    rendering = rendering_parts.build_full_line_with_annotations(
+        renderer.to_foldable_representation(target, ignore_exceptions=True)
+    )
+
+    layout_algorithms.expand_to_depth(rendering, 0)
+    self.assertEqual(
+        lowering.render_to_text_as_root(rendering),
+        f"[{object.__repr__(target[0])}]",
+    )
+    layout_algorithms.expand_to_depth(rendering, 2)
+    self.assertEqual(
+        lowering.render_to_text_as_root(rendering),
+        textwrap.dedent(f"""\
+            [
+              {object.__repr__(target[0])},  # Error occured while formatting this object.
             ]"""),
     )
 
@@ -803,9 +907,7 @@ class TreescopeRendererTest(parameterized.TestCase):
             ),
         )
 
-    with treescope.active_autovisualizer.set_scoped(
-        autovisualizer_for_test
-    ):
+    with treescope.active_autovisualizer.set_scoped(autovisualizer_for_test):
       renderer = treescope.active_renderer.get()
       rendering = rendering_parts.build_full_line_with_annotations(
           renderer.to_foldable_representation(target)

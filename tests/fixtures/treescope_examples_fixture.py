@@ -27,6 +27,7 @@ from typing import Any
 
 import jax
 import torch
+import treescope
 
 
 class MyTestEnum(enum.Enum):
@@ -122,6 +123,7 @@ mutable_constant = [1, 2, 3]
 
 
 class SomethingCallable:
+
   def __call__(self, value: int) -> int:
     return value + 1
 
@@ -173,6 +175,47 @@ class UnknownObjectWithBadMultiLineRepr:
 
   def __repr__(self):
     return "Non-idiomatic\nmultiline\nobject"
+
+
+class ObjectWithCustomHandler:
+
+  def __treescope_repr__(self, path, subtree_renderer):
+    del subtree_renderer
+    return treescope.rendering_parts.text(
+        f"<ObjectWithCustomHandler custom rendering! Path: {repr(path)}>"
+    )
+
+
+class ObjectWithCustomHandlerThatThrows:
+
+  def __treescope_repr__(self, path, subtree_renderer):
+    del path, subtree_renderer
+    raise RuntimeError("Simulated treescope_repr failure!")
+
+  def __repr__(self):
+    return "<Fallback repr for ObjectWithCustomHandlerThatThrows>"
+
+
+class ObjectWithReprThatThrows:
+
+  def __repr__(self):
+    raise RuntimeError("Simulated repr failure!")
+
+
+class ObjectWithCustomHandlerThatThrowsDeferred:
+
+  def __treescope_repr__(self, path, subtree_renderer):
+    del path, subtree_renderer
+    def _internal_main_thunk(layout_decision):
+      del layout_decision
+      raise RuntimeError("Simulated deferred treescope_repr failure!")
+
+    return treescope.lowering.maybe_defer_rendering(
+        main_thunk=_internal_main_thunk,
+        placeholder_thunk=lambda: treescope.rendering_parts.text(
+            "<deferred placeholder>"
+        ),
+    )
 
 
 class SomePyTorchModule(torch.nn.Module):

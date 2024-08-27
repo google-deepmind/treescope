@@ -328,12 +328,18 @@ class TreescopeRenderer:
               f"No handler registered for a node of type {type(node)}."
           )
           # Fall back to a basic `repr` so that we still render something even
-          # without a handler for it.
+          # without a handler for it. We use the object repr because a custom
+          # repr may still raise an exception if the object is in an invalid
+          # state.
           return rendering_parts.RenderableAndLineAnnotations(
-              renderable=rendering_parts.abbreviation_color(
-                  rendering_parts.text(repr(node))
+              renderable=rendering_parts.error_color(
+                  rendering_parts.text(object.__repr__(node))
               ),
-              annotations=rendering_parts.empty_part(),
+              annotations=rendering_parts.comment_color(
+                  rendering_parts.text(
+                      "  # Error occured while formatting this object."
+                  )
+              ),
           )
         else:
           raise ValueError(
