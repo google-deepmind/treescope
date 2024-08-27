@@ -896,11 +896,9 @@ const arrayviz = (() => {
 
     container.style.width = 'fit-content';
     container.style.height = 'fit-content';
-    container.style.setProperty('image-rendering', 'pixelated');
     container.style.fontFamily = 'monospace';
     container.style.transformOrigin = 'top left';
     container.style.setProperty('image-rendering', 'pixelated');
-
     container.style.setProperty('--arrayviz-zoom', '1');
     container.style.setProperty('--base-font-size', '14px');
 
@@ -1013,8 +1011,8 @@ const arrayviz = (() => {
     const datalist =
         /** @type {!HTMLDataListElement} */ (
             destination.appendChild(document.createElement('datalist')));
-    datalist.id = "arrayviz-markers";
-    for (const val of [1, 7, 14, 21]) {
+    datalist.id = 'arrayviz-markers';
+    for (const val of [1, 2, 3.5, 7, 14, 21]) {
       const datalistOption = /** @type {!HTMLOptionElement} */ (
           datalist.appendChild(document.createElement('option')));
       datalistOption.value = val;
@@ -1022,10 +1020,10 @@ const arrayviz = (() => {
     const zoomslider =
         /** @type {!HTMLInputElement} */ (document.createElement('input'));
     zoomslider.type = 'range';
-    zoomslider.value = pixelsPerCell;
     zoomslider.min = '1';
     zoomslider.max = '21';
-    zoomslider.step = '1';
+    zoomslider.step = 'any';
+    zoomslider.value = pixelsPerCell;
     zoomslider.setAttribute('list', datalist.id);
     const infodiv = /** @type {!HTMLDivElement} */ (
         destination.appendChild(document.createElement('div')));
@@ -1089,18 +1087,48 @@ const arrayviz = (() => {
 
     // Event handlers.
     let pendingZoomPixels = 0;
+    const updateZoomFromSlider = () => {
+      // For accurate pixel alignment: Round device pixel ratio to an integer
+      // so that zoom level 1 is an integer number of pixels.
+      let roundedPxRatio = Math.round(window.devicePixelRatio);
+      if (window.devicePixelRatio < 1) {
+        roundedPxRatio = 1 / Math.round(1 / window.devicePixelRatio);
+      }
+      const pixelRatioAdjustment = roundedPxRatio / window.devicePixelRatio;
+      // For accurate pixel alignment: Round to the closest number of physical
+      // pixels, then map back to logical scale.
+      let cssPxTarget = parseFloat(zoomslider.value);
+      if (cssPxTarget < 1) {
+        cssPxTarget = 1;
+      }
+      if ((cssPxTarget * roundedPxRatio) % cellSize == 0) {
+        container.style.setProperty('image-rendering', 'pixelated');
+      } else {
+        container.style.setProperty('image-rendering', 'auto');
+      }
+      const scale = (cssPxTarget / cellSize) * pixelRatioAdjustment;
+      container.style.setProperty('--arrayviz-zoom', `${scale}`);
+      fixMargins();
+    };
+    const watchPixelRatio = () => {
+      const media =
+          window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      const listener = () => {
+        media.removeEventListener('change', listener);
+        updateZoomFromSlider();
+        watchPixelRatio();
+      };
+      media.addEventListener('change', listener);
+    };
     zoomslider.addEventListener('input', () => {
       pendingZoomPixels = 0;
       const oldTop = zoomslider.offsetTop;
-      const scale = parseFloat(zoomslider.value) / cellSize;
-      container.style.setProperty('--arrayviz-zoom', `${scale}`);
-      fixMargins();
+      updateZoomFromSlider();
       // Try to keep it in a consistent place:
       window.scrollBy(
           {top: zoomslider.offsetTop - oldTop, behavior: 'instant'});
       // In case that didn't work, make sure it's at least visible:
       zoomslider.scrollIntoView({behavior: 'instant', block: 'nearest'});
-      console.log('Fixing scroll');
     });
     canvas.addEventListener('mousemove', (evt) => {
       const lookup = lookupPixel(evt.offsetX, evt.offsetY);
@@ -1189,9 +1217,7 @@ const arrayviz = (() => {
           }
         }
         zoomslider.value = curZoomLevel;
-        const scale = curZoomLevel / cellSize;
-        container.style.setProperty('--arrayviz-zoom', `${scale}`);
-        fixMargins();
+        updateZoomFromSlider();
         // Try to keep it in a consistent place. offsetX/offsetY are relative to
         // the zoom level, so we have to scale them.
         const baseRect = inner.getBoundingClientRect();
@@ -1207,8 +1233,8 @@ const arrayviz = (() => {
 
     // Draw the initial output.
     drawAllCells();
-    fixMargins();
-    zoomslider.dispatchEvent(new Event('input'));
+    updateZoomFromSlider();
+    watchPixelRatio();
   }
 
   /**

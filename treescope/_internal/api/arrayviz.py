@@ -126,7 +126,7 @@ def render_array(
     axis_item_labels: dict[AxisName | int, list[str]] | None = None,
     value_item_labels: dict[int, str] | None = None,
     axis_labels: dict[AxisName | int, str] | None = None,
-    pixels_per_cell: int = 7,
+    pixels_per_cell: int | float = 7,
 ) -> figures_impl.TreescopeFigure:
   """Renders an array (positional or named) to a displayable HTML object.
 
@@ -386,7 +386,7 @@ def _render_pretruncated(
     axis_item_labels: dict[AxisName | int, list[str]] | None,
     value_item_labels: dict[int, str] | None,
     axis_labels: dict[AxisName | int, str] | None,
-    pixels_per_cell: int = 7,
+    pixels_per_cell: int | float = 7,
 ) -> arrayviz_impl.ArrayvizRendering:
   """Internal helper to render an array that has already been truncated."""
   if axis_item_labels is None:

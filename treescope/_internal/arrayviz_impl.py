@@ -142,7 +142,7 @@ def render_array_data_to_html(
     dynamic_continous_cmap: bool = False,
     raw_min_abs: float | None = None,
     raw_max_abs: float | None = None,
-    pixels_per_cell: int = 7
+    pixels_per_cell: int | float = 7
 ) -> str:
   """Helper to render an array to HTML by passing arguments to javascript.
 

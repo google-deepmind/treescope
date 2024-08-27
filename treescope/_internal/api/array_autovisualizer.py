@@ -70,6 +70,11 @@ class ArrayAutovisualizer:
       visualization. Useful for seeing small array values.
     token_lookup_fn: Optional function that looks up token IDs and adds them to
       the visualization on hover.
+    pixels_per_cell: Size of each rendered array element in pixels, between 1
+      and 21 inclusive. This controls the zoom level of the rendering. Array
+      elements are always drawn at 7 pixels per cell and then rescaled, so
+      out-of-bounds annotations and "digitbox" integer value patterns may not
+      display correctly at fewer than 7 pixels per cell.
   """
 
   maximum_size: int = 4_000
@@ -81,6 +86,7 @@ class ArrayAutovisualizer:
   force_continuous: bool = False
   include_repr_line_threshold: int = 5
   token_lookup_fn: Callable[[int], str] | None = None
+  pixels_per_cell: int | float = 7
 
   def _autovisualize_array(
       self,
@@ -159,6 +165,7 @@ class ArrayAutovisualizer:
         axis_item_labels=None,
         value_item_labels=value_item_labels,
         axis_labels=None,
+        pixels_per_cell=self.pixels_per_cell,
     )
     outputs = [array_rendering]
     last_line_parts = []
