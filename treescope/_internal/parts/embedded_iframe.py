@@ -84,27 +84,36 @@ class EmbeddedIFrame(RenderableTreePart):
       self, context: HtmlContextForSetup
   ) -> set[CSSStyleRule | JavaScriptDefn]:
     rules = {
-        # Register an interaction observer to detect when the content of the
-        # iframe changes size, then update the size of the iframe element
-        # itself to match its content.
-        # But start with a minimum width of 80 characters.
+        # We want to make sure that the iframe is big enough to contain its
+        # content, but this depends on how the content is formatted. Currently
+        # we take the minimum of two strategies:
+        # - The computed size of the content when given a frame size of 80
+        #   characters wide (the initial iframe size).
+        # - The size of the content scrollbar when rendered at width 0 (to catch
+        #   elements that are overflowing and don't get counted by the computed
+        #   size)
+        # We also detect resizes of the internal content and update the size of
+        # the iframe accordingly.
         JavaScriptDefn(html_escaping.without_repeated_whitespace("""
         this.getRootNode().host.defns.resize_iframe_by_content = ((iframe) => {
-          iframe.height = 0;
-          iframe.style.width = "80ch";
-          iframe.style.overflow = "hidden";
-          iframe.contentDocument.scrollingElement.style.width = "fit-content";
-          iframe.contentDocument.scrollingElement.style.height = "fit-content";
-          iframe.contentDocument.scrollingElement.style.overflow = "hidden";
+          const scroller = iframe.contentDocument.scrollingElement;
+          scroller.style.width = "0";
+          scroller.style.height = "0";
+          const minWidth = scroller.scrollWidth;
+          const minHeight = scroller.scrollHeight;
+          scroller.style.width = "fit-content";
+          scroller.style.height = "fit-content";
+          scroller.style.overflow = "hidden";
           const observer = new ResizeObserver((entries) => {
-            console.log("resize", entries);
             const [entry] = entries;
-            const computedStyle = getComputedStyle(
-                iframe.contentDocument.scrollingElement);
-            iframe.style.width = `calc(4ch + ${computedStyle['width']})`;
-            iframe.style.height = `calc(${computedStyle['height']})`;
+            const computedStyle = getComputedStyle(scroller);
+            iframe.style.width =
+              `calc(4ch + max(${computedStyle['width']}, ${minWidth}px))`;
+            iframe.style.height =
+              `calc(max(${computedStyle['height']}, ${minHeight}px))`;
           });
-          observer.observe(iframe.contentDocument.scrollingElement);
+          observer.observe(scroller);
+          console.log("registered scroller", scroller);
         });
         """)),
         CSSStyleRule(html_escaping.without_repeated_whitespace("""
@@ -134,6 +143,7 @@ class EmbeddedIFrame(RenderableTreePart):
     )
     stream.write(
         f'<div class="embedded_html"><iframe srcdoc="{srcdoc}"'
+        ' style="width: 80ch; height: 0; overflow: hidden"'
         ' onload="this.getRootNode().host.defns.resize_iframe_by_content(this)">'
         '</iframe></div>'
     )

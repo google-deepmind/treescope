@@ -21,6 +21,7 @@ from typing import Any
 from treescope import lowering
 from treescope import renderers
 from treescope import rendering_parts
+from treescope._internal import figures_impl
 from treescope._internal import object_inspection
 from treescope._internal.api import autovisualize
 
@@ -61,7 +62,9 @@ def use_autovisualizer_if_present(
       ordinary_result = node_renderer(node, path)
 
     if isinstance(result, IPythonVisualization):
-      if isinstance(result.display_object, object_inspection.HasReprHtml):
+      if isinstance(result.display_object, figures_impl.TreescopeFigure):
+        ipy_rendering = result.display_object.treescope_part
+      elif isinstance(result.display_object, object_inspection.HasReprHtml):
         obj = result.display_object
 
         def _thunk(_):
@@ -126,12 +129,28 @@ def use_autovisualizer_if_present(
         )
       else:
         replace = False
-        rendering_and_annotations = rendering_parts.RenderableAndLineAnnotations(
-            renderable=rendering_parts.floating_annotation_with_separate_focus(
-                rendering_parts.in_outlined_box(ipy_rendering)
-            ),
-            annotations=rendering_parts.empty_part(),
+        internal_contents = (
+            rendering_parts.floating_annotation_with_separate_focus(
+                rendering_parts.fold_condition(
+                    collapsed=rendering_parts.comment_color(
+                        rendering_parts.text("(Visualization hidden)")
+                    ),
+                    expanded=ipy_rendering,
+                )
+            )
         )
+        rendering_and_annotations = (
+            rendering_parts.RenderableAndLineAnnotations(
+                renderable=rendering_parts.in_outlined_box(
+                    rendering_parts.build_custom_foldable_tree_node(
+                        contents=internal_contents,
+                        expand_state=rendering_parts.ExpandState.EXPANDED,
+                    ).renderable
+                ),
+                annotations=rendering_parts.empty_part(),
+            )
+        )
+
     else:
       assert isinstance(result, VisualizationFromTreescopePart)
       replace = True

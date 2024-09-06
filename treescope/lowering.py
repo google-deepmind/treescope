@@ -382,20 +382,28 @@ def _render_to_html_as_root_streaming(
       stream.write("</span></div>")
 
     all_ids = [deferred.placeholder.replacement_id for deferred in deferreds]
+    # It's sometimes important to preserve node identity when inserting
+    # deferred objects, for instance if we've already registered event listeners
+    # on some nodes. However, editing the DOM in place can be slow because it
+    # requires re-rendering the tree on every edit. To avoid this, we swap out
+    # the tree with a clone, edit the original tree, then swap the original
+    # tree back in.
     inner_script = (
         f"const targetIds = {json.dumps(all_ids)};"
         + html_escaping.without_repeated_whitespace("""
         const docroot = this.getRootNode();
         const treeroot = docroot.querySelector(".treescope_root");
+        const treerootClone = treeroot.cloneNode(true);
+        treeroot.replaceWith(treerootClone);
         const fragment = document.createDocumentFragment();
-        const treerootClone = fragment.appendChild(treeroot.cloneNode(true));
+        fragment.appendChild(treeroot);
         for (let i = 0; i < targetIds.length; i++) {
             let target = fragment.getElementById(targetIds[i]);
             let sourceDiv = docroot.querySelector("#for_" + targetIds[i]);
             target.replaceWith(sourceDiv.firstElementChild);
             sourceDiv.remove();
         }
-        treeroot.replaceWith(treerootClone);
+        treerootClone.replaceWith(treeroot);
         """)
     )
     stream.write(
