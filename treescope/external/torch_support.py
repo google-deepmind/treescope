@@ -52,6 +52,13 @@ method instead, which matches default Torch repr behavior.
 """
 
 
+def _tensor_to_numpy(tensor: torch.Tensor) -> np.ndarray:
+  """Converts a tensor to a numpy array, safely handling 16-bit float dtypes."""
+  if tensor.dtype == torch.bfloat16 or tensor.dtype == torch.float16:
+    return tensor.float().numpy(force=True)
+  return tensor.numpy(force=True)
+
+
 def _truncate_and_copy(
     array_source: torch.Tensor,
     array_dest: np.ndarray,
@@ -79,7 +86,7 @@ def _truncate_and_copy(
     assert (
         len(prefix_slices) == len(array_source.shape) == len(array_dest.shape)
     )
-    array_dest[prefix_slices] = array_source[prefix_slices].numpy(force=True)
+    array_dest[prefix_slices] = _tensor_to_numpy(array_source[prefix_slices])
   else:
     # Recursive step.
     axis = len(prefix_slices)
@@ -145,7 +152,7 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
 
     if edge_items_per_axis == (None,) * array.ndim:
       # No truncation.
-      return array.numpy(force=True), mask.numpy(force=True)
+      return _tensor_to_numpy(array), _tensor_to_numpy(mask)
 
     dest_shape = [
         size if edge_items is None else 2 * edge_items + 1
@@ -250,10 +257,27 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
 
     return "".join(output_parts)
 
+  def get_sharding_info_for_array_data(
+      self, array: torch.Tensor
+  ) -> ndarray_adapters.ShardingInfo | None:
+    assert torch is not None, "PyTorch is not available."
+    # Torch tensors are always on a single device.
+    return ndarray_adapters.ShardingInfo(
+        shard_shape=array.shape,
+        device_index_to_shard_slices={
+            array.get_device(): (slice(None),) * array.ndim
+        },
+        device_type=array.device.type,
+    )
+
   def get_numpy_dtype(self, array: torch.Tensor) -> np.dtype:
     assert torch is not None, "PyTorch is not available."
     # Convert a zero-sized tensor to a numpy array to get its dtype.
-    return torch.zeros((0,), dtype=array.dtype).numpy().dtype
+    return _tensor_to_numpy(torch.zeros((0,), dtype=array.dtype)).dtype
+
+  def should_autovisualize(self, array: torch.Tensor) -> bool:
+    assert torch is not None, "PyTorch is not available."
+    return array.device.type != "meta"
 
 
 def render_torch_tensors(
@@ -269,6 +293,9 @@ def render_torch_tensors(
   assert torch is not None, "PyTorch is not available."
   del subtree_renderer
   assert isinstance(node, torch.Tensor)
+  if node.device.type == "meta":
+    # Don't render tensors on the meta device (they have no data).
+    return NotImplemented
   adapter = TorchTensorAdapter()
 
   def _placeholder() -> rendering_parts.RenderableTreePart:

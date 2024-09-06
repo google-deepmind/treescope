@@ -16,6 +16,7 @@
 
 
 import ast
+import collections
 import dataclasses
 import enum
 import types
@@ -407,6 +408,7 @@ BUILTINS_REGISTRY = {
     frozenset: render_sequence_or_set,
     types.SimpleNamespace: render_simplenamespace,
     ast.AST: render_namedtuple_or_ast,
+    collections.UserDict: render_dict,
 }
 
 

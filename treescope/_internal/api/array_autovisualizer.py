@@ -176,9 +176,12 @@ class ArrayAutovisualizer:
       num_devices = len(sharding_info.device_index_to_shard_slices)
       if num_devices == 1:
         [device_id] = sharding_info.device_index_to_shard_slices.keys()
-        last_line_parts.append(
-            f"| Device: {sharding_info.device_type} {device_id}"
-        )
+        if device_id == -1:
+          last_line_parts.append(f"| Device: {sharding_info.device_type}")
+        else:
+          last_line_parts.append(
+              f"| Device: {sharding_info.device_type} {device_id}"
+          )
       else:
         if sharding_info.fully_replicated:
           sharding_summary_str = (
