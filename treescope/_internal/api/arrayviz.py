@@ -271,7 +271,7 @@ def render_array(
     )
   if not 1 <= pixels_per_cell <= 21:
     raise ValueError(
-        f"pixels_per_cell must be between 1 and 21 inclusive, got"
+        "pixels_per_cell must be between 1 and 21 inclusive, got"
         f" {pixels_per_cell}"
     )
 
@@ -741,8 +741,37 @@ def render_sharding_info(
       raise ValueError(f"Unrecognized axis info {type(info)}")
 
   array_shape = [info.size for info in array_axis_info]
-  shard_shape = sharding_info.shard_shape
-  num_shards = np.prod(array_shape) // np.prod(shard_shape)
+  orig_shard_shape = sharding_info.shard_shape
+  num_shards = np.prod(array_shape) // np.prod(orig_shard_shape)
+  orig_device_indices_map = sharding_info.device_index_to_shard_slices
+  # Possibly adjust the shard shape so that its length is the same as the array
+  # shape, and so that all items in device_indices_map are slices.
+  device_indices_map = {}
+  shard_shape = []
+  orig_shard_shape_index = 0
+  first = True
+  for key, ints_or_slices in orig_device_indices_map.items():
+    new_slices = []
+    for i, int_or_slc in enumerate(ints_or_slices):
+      if isinstance(int_or_slc, int):
+        new_slices.append(slice(int_or_slc, int_or_slc + 1))
+        if first:
+          shard_shape.append(1)
+      elif isinstance(int_or_slc, slice):
+        new_slices.append(int_or_slc)
+        if first:
+          shard_shape.append(orig_shard_shape[orig_shard_shape_index])
+          orig_shard_shape_index += 1
+      else:
+        raise ValueError(
+            f"Unrecognized axis slice in sharding info: {int_or_slc} at index"
+            f" {i} for device {key}"
+        )
+    device_indices_map[key] = tuple(new_slices)
+    first = False
+
+  assert len(shard_shape) == len(array_shape)
+  assert orig_shard_shape_index == len(orig_shard_shape)
   # Compute a truncation for visualizing a single shard. Each shard will be
   # shown as a shrunken version of the actual shard dimensions, roughly
   # proportional to the shard sizes.
@@ -776,7 +805,6 @@ def render_sharding_info(
         vec = np.array([True] * candidate + [False] + [True] * candidate)
     shard_mask = shard_mask[..., None] * vec
   # Figure out which device is responsible for each shard.
-  device_indices_map = sharding_info.device_index_to_shard_slices
   device_to_shard_offsets = {}
   shard_offsets_to_devices = collections.defaultdict(list)
   for device_index, slices in device_indices_map.items():
@@ -789,6 +817,7 @@ def render_sharding_info(
       else:
         assert slc.stop == slc.start + shard_shape[i]
         shard_offsets.append(slc.start // shard_shape[i])
+
     shard_offsets = tuple(shard_offsets)
     device_to_shard_offsets[device_index] = shard_offsets
     shard_offsets_to_devices[shard_offsets].append(device_index)

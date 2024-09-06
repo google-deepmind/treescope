@@ -83,53 +83,28 @@ class NamedPositionalAxisInfo:
 
 
 @dataclasses.dataclass(frozen=True)
-class ArraySummary:
-  """Summary of the contents of an array.
-
-  Any of the attributes of this summary can be None to indicate that the
-  corresponding statistic is not applicable to the array (either because of
-  dtype or because there are no finite values).
-
-  Attributes:
-    finite_mean: The mean of the finite values in the array.
-    finite_stddev: The standard deviation of the finite values in the array.
-    finite_min: The minimum of the finite values in the array.
-    finite_max: The maximum of the finite values in the array.
-    count_zero: The number of zero values in the array.
-    count_nonzero: The number of nonzero values in the array.
-    count_nan: The number of NaN values in the array.
-    count_posinf: The number of positive infinity values in the array.
-    count_neginf: The number of negative infinity values in the array.
-  """
-
-  finite_mean: float | None
-  finite_stddev: float | None
-  finite_min: float | None
-  finite_max: float | None
-  count_zero: int | None
-  count_nonzero: float | None
-  count_nan: float | None
-  count_posinf: float | None
-  count_neginf: float | None
-
-
-@dataclasses.dataclass(frozen=True)
 class ShardingInfo:
   """Summary of the sharding of an array.
 
   Attributes:
-    shard_shape: Shape of a single shard.
+    shard_shape: Shape of a single shard. Should be the same length as the
+      number of slices in each value of `device_index_to_shard_slices`.
     device_index_to_shard_slices: A mapping from device index to the tuple of
-      per-axis slices of the original array that is assigned to that device. The
-      length of each axis slice must match the `shard_shape` along that axis (or
-      be the full slice ``slice(None)``).
+      per-axis indices or slices of the original array that is assigned to that
+      device. Each entry of this tuple should either be an int or a slice
+      object. If an int, that axis should not appear in shard_shape (e.g. the
+      full array is formed by stacking the shards along a new axis). If a slice,
+      the corresponding axis should appear in shard_shape, and the slice should
+      be the full slice ``slice(None)`` (if the array is not sharded over this
+      axis) or a slice that matches the corresponding entry in `shard_shape` (if
+      the full array is formed by concatenating the shards along this axis).
     device_type: The type of device that the array is sharded across, as a
       string (e.g. "CPU", "TPU", "GPU").
     fully_replicated: Whether the array is fully replicated across all devices.
   """
 
   shard_shape: tuple[int, ...]
-  device_index_to_shard_slices: dict[int, tuple[slice, ...]]
+  device_index_to_shard_slices: dict[int, tuple[slice | int, ...]]
   device_type: str
   fully_replicated: bool = False
 
