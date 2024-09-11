@@ -304,8 +304,6 @@ def render_shape_dtype_struct(
       "shape": node.shape,
       "dtype": node.dtype,
   }
-  if node.named_shape:
-    attributes["named_shape"] = node.named_shape
   if node.sharding is not None:
     attributes["sharding"] = node.sharding
 
