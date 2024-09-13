@@ -321,6 +321,7 @@ def _render_to_html_as_root_streaming(
     classnames += " roundtrip_mode"
   stream.write(
       f'<div class="{classnames}" tabindex="0" '
+      'part="treescope_root" '
       'onkeydown="this.getRootNode().host.defns'
       '.toggle_root_roundtrip(this, event)">'
   )
