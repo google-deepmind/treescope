@@ -34,6 +34,7 @@ from treescope import handlers
 from treescope import layout_algorithms
 from treescope import lowering
 from treescope import rendering_parts
+from treescope.external import jax_support
 from tests.fixtures import treescope_examples_fixture as fixture_lib
 
 
@@ -634,6 +635,23 @@ class TreescopeRendererTest(parameterized.TestCase):
         ],
         lowering.render_to_text_as_root(rendering),
     )
+
+  def test_render_jax_array_within_jitted_function(self):
+    old = jax_support.SUMMARIZE_USING_NUMPY_THRESHOLD
+    jax_support.SUMMARIZE_USING_NUMPY_THRESHOLD = 0
+    renderer = treescope.active_renderer.get()
+    x = jnp.arange(10)
+
+    # Verify that we don't fail when called inside a jitted function.
+    @jax.jit
+    def go(s):
+      nonlocal renderer, x
+      adapter = jax_support.JAXArrayAdapter()
+      self.assertNotEmpty(adapter.get_array_summary(x, False))
+      return jax.numpy.sum(s)
+
+    go(jnp.arange(3))
+    jax_support.SUMMARIZE_USING_NUMPY_THRESHOLD = old
 
   def test_fallback_repr_pytree_node(self):
     target = [fixture_lib.UnknownPytreeNode(1234, 5678)]
