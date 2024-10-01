@@ -102,7 +102,7 @@ class ErrorColor(basic_parts.BaseSpanGroup):
 def error_color(
     child: part_interface.RenderableTreePart,
 ) -> part_interface.RenderableTreePart:
-  """Returns a wrapped child in red to indicate errors / problems during rendering."""
+  """Returns a wrapped child in red to indicate errors during rendering."""
   if not isinstance(child, RenderableTreePart):
     raise ValueError(
         f"`child` must be a renderable part, but got {type(child).__name__}"
@@ -278,8 +278,7 @@ def _common_block_rules(
     context: HtmlContextForSetup,
 ) -> dict[str, CSSStyleRule]:
   return {
-      "colored_line": CSSStyleRule(
-          html_escaping.without_repeated_whitespace("""
+      "colored_line": CSSStyleRule(html_escaping.without_repeated_whitespace("""
             .colored_line
             {
               color: black;
@@ -287,8 +286,7 @@ def _common_block_rules(
               border-top: 1px solid var(--block-color);
               border-bottom: 1px solid var(--block-color);
             }
-          """)
-      ),
+          """)),
       "patterned_line": CSSStyleRule(
           html_escaping.without_repeated_whitespace("""
             .patterned_line

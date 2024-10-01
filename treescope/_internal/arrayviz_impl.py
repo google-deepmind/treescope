@@ -55,14 +55,14 @@ def load_arrayvis_javascript() -> str:
   base = filepath.removesuffix("arrayviz_impl.py")
   load_path = os.path.join(base, "js", "arrayviz.js")
 
-  with open(load_path, "r") as f:
+  with open(load_path, "r", encoding="utf-8") as f:
     return f.read()
 
 
 def html_setup() -> (
     set[part_interface.CSSStyleRule | part_interface.JavaScriptDefn]
 ):
-  """Builds the setup HTML that should be included in any arrayviz output cell."""
+  """Builds the setup HTML that should be included in any arrayviz output."""
   arrayviz_src = html_escaping.heuristic_strip_javascript_comments(
       load_arrayvis_javascript()
   )
@@ -142,7 +142,7 @@ def render_array_data_to_html(
     dynamic_continous_cmap: bool = False,
     raw_min_abs: float | None = None,
     raw_max_abs: float | None = None,
-    pixels_per_cell: int | float = 7
+    pixels_per_cell: int | float = 7,
 ) -> str:
   """Helper to render an array to HTML by passing arguments to javascript.
 

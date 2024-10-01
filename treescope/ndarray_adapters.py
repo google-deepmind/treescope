@@ -253,7 +253,6 @@ class NDArrayAdapter(abc.ABC, Generic[T]):
     """
     # Default implementation: don't show any sharding information.
     del array
-    return None
 
   def should_autovisualize(self, array: T) -> bool:
     """Returns True if the given array should be automatically visualized.

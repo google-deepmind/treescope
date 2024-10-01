@@ -178,6 +178,8 @@ def render_enum(
         ),
         path,
     )
+  else:
+    return NotImplemented
 
 
 def render_dict(

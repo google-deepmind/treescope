@@ -40,7 +40,7 @@ def is_integer_dtype(dtype: numpy.typing.DTypeLike) -> bool:
   if np.issubdtype(dtype, np.integer):
     return True
   if isinstance(dtype.type, type) and dtype.type.__module__ == "ml_dtypes":
-    import ml_dtypes  # pylint: disable=g-import-not-at-top
+    import ml_dtypes  # pylint: disable=import-outside-toplevel
 
     try:
       _ = ml_dtypes.iinfo(dtype)
@@ -66,7 +66,7 @@ def is_floating_dtype(dtype: numpy.typing.DTypeLike) -> bool:
   if np.issubdtype(dtype, np.floating):
     return True
   if isinstance(dtype.type, type) and dtype.type.__module__ == "ml_dtypes":
-    import ml_dtypes  # pylint: disable=g-import-not-at-top
+    import ml_dtypes  # pylint: disable=import-outside-toplevel
 
     try:
       _ = ml_dtypes.finfo(dtype)

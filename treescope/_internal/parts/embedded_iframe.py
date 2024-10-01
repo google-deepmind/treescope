@@ -144,8 +144,8 @@ class EmbeddedIFrame(RenderableTreePart):
     stream.write(
         f'<div class="embedded_html"><iframe srcdoc="{srcdoc}"'
         ' style="width: 80ch; height: 0; overflow: hidden"'
-        ' onload="this.getRootNode().host.defns.resize_iframe_by_content(this)">'
-        '</iframe></div>'
+        ' onload="this.getRootNode().host.defns.resize_iframe_by_content(this)"'
+        '></iframe></div>'
     )
 
 

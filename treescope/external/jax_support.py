@@ -31,13 +31,13 @@ from treescope import rendering_parts
 from treescope import repr_lib
 from treescope import type_registries
 
-# pylint: disable=g-import-not-at-top
+# pylint: disable=import-outside-toplevel
 try:
   import jax
 except ImportError:
   assert not typing.TYPE_CHECKING
   jax = None
-# pylint: enable=g-import-not-at-top
+# pylint: enable=import-outside-toplevel
 
 
 def _is_subdtype(dtype, base) -> bool:
@@ -95,7 +95,7 @@ def _is_locally_available(array: jax.Array) -> bool:
 
 
 def safe_to_summarize(array: jax.Array) -> bool:
-  """Checks if the array is safe to summarize (not a tracer and not replicated)."""
+  """Checks if the array is safe to summarize (not a tracer, not replicated)."""
   assert jax is not None, "JAX is not available."
   if isinstance(array, jax.core.Tracer):
     return False

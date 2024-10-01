@@ -158,10 +158,10 @@ __version__ = '0.1.5'
 
 # Set up canonical aliases for the treescope API itself.
 def _setup_canonical_aliases_for_api():
-  import types  # pylint: disable=g-import-not-at-top
+  import types  # pylint: disable=import-outside-toplevel
 
   for key, value in globals().items():
-    if isinstance(value, types.FunctionType) or isinstance(value, type):
+    if isinstance(value, (type, types.FunctionType)):
       canonical_aliases.add_alias(
           value, canonical_aliases.ModuleAttributePath(__name__, (key,))
       )

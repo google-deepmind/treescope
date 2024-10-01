@@ -465,7 +465,7 @@ def display_streaming_as_root(
     IPython "cell output", which is visible in some IPython backends (e.g.
     JupyterLab). If ``stealable`` is False, returns None.
   """
-  import IPython.display  # pylint: disable=g-import-not-at-top
+  import IPython.display  # pylint: disable=import-outside-toplevel
 
   render_iterator = _render_to_html_as_root_streaming(
       root_node, roundtrip, deferreds, ignore_exceptions=ignore_exceptions

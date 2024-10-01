@@ -26,15 +26,16 @@ from treescope._internal.api import array_autovisualizer
 from treescope._internal.api import autovisualize as autovisualize_lib
 from treescope._internal.api import default_renderer
 
-# pylint: disable=g-import-not-at-top
+# pylint: disable=import-outside-toplevel
 try:
   import IPython
 except ImportError:
   IPython = None
 else:
   import IPython.core.formatters
+  import IPython.core.magic
   import IPython.display
-# pylint: enable=g-import-not-at-top
+# pylint: enable=import-outside-toplevel
 
 
 default_magic_autovisualizer: context.ContextualValue[
@@ -335,7 +336,7 @@ def register_as_default(
       display_formatter.formatters[k] = v
 
   try:
-    from google.colab import _reprs  # pylint: disable=g-import-not-at-top  # pytype: disable=import-error
+    from google.colab import _reprs  # pytype: disable=import-error  # pylint: disable=import-outside-toplevel,line-too-long
 
     _reprs.disable_string_repr()
     try:
@@ -441,7 +442,7 @@ if IPython is not None:
 
   @IPython.core.magic.magics_class
   class ContextManagerMagic(IPython.core.magic.Magics):
-    """Magics class for using ``%%with`` to run a cell under a context manager."""
+    """Magics class for using ``%%with`` to run a cell in a context manager."""
 
     @IPython.core.magic.cell_magic("with")
     def with_(self, line, cell):
