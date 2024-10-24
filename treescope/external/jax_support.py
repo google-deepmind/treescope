@@ -369,8 +369,12 @@ def _compute_summary(
   if is_floating:
     isfinite = xnp.isfinite(x)
     inf_to_nan = xnp.where(isfinite, x, xnp.array(xnp.nan, dtype=x.dtype))
-    result.update(mean=xnp.nanmean(inf_to_nan), std=xnp.nanstd(inf_to_nan))
-    result.update(nanmin=xnp.nanmin(x), nanmax=xnp.nanmax(x))
+    nanmean = functools.partial(xnp.nanmean, dtype=xnp.float32)
+    nanstd = functools.partial(xnp.nanstd, dtype=xnp.float32)
+    nanmin = lambda x: xnp.nanmin(x).astype(xnp.float32)
+    nanmax = lambda x: xnp.nanmax(x).astype(xnp.float32)
+    result.update(mean=nanmean(inf_to_nan), std=nanstd(inf_to_nan))
+    result.update(nanmin=nanmin(x), nanmax=nanmax(x))
     result.update(
         nan=xnp.count_nonzero(xnp.isnan(x)),
         inf=xnp.count_nonzero(xnp.isposinf(x)),
