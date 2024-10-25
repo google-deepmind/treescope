@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Single-purpose ndarray visualizer for Python in vanilla Javascript.
+"""Single-purpose ndarray visualizer for Python in vanilla JavaScript.
 
 Designed to quickly visualize the contents of arbitrarily-high-dimensional
 NDArrays, to allow them to be visualized by default instead of requiring lots

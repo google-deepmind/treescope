@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Javascript implementation of arrayviz.
+ * @fileoverview JavaScript implementation of arrayviz.
  * This file is inserted into the generated Treescope HTML when arrayviz is
  * used from Python.
  */
