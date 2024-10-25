@@ -223,7 +223,7 @@ def render_array(
         something like ``palettable.matplotlib.Inferno_20.colors``.
       truncate: Whether or not to truncate the array to a smaller size before
         rendering.
-      maximum_size: Maximum numer of elements of an array to show. Arrays larger
+      maximum_size: Maximum number of elements of an array to show. Arrays larger
         than this will be truncated along one or more axes. Ignored unless
         ``truncate`` is True.
       cutoff_size_per_axis: Maximum number of elements of each individual axis

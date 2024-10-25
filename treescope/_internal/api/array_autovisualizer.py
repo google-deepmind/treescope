@@ -54,7 +54,7 @@ class ArrayAutovisualizer:
   in the global type registry.
 
   Attributes:
-    maximum_size: Maximum numer of elements of an array to show. Arrays larger
+    maximum_size: Maximum number of elements of an array to show. Arrays larger
       than this will be truncated along one or more axes.
     cutoff_size_per_axis: Maximum number of elements of each individual axis to
       show without truncation. Any axis longer than this will be truncated, with
