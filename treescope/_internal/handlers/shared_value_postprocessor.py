@@ -114,7 +114,7 @@ class DynamicSharedCheck(rendering_parts.RenderableTreePart):
     if_shared: Child to render only if the node is shared.
     node_id: Node ID of the node we are rendering. Used for the warning and also
       looked up in `seen_more_than_once`.
-    seen_more_than_once: Reference to an externally-maintaned set of node IDs
+    seen_more_than_once: Reference to an externally-maintained set of node IDs
       we've seen more than once. Usually, this will be the same set from the
       active `_shared_object_ids_seen` context.
   """
@@ -195,7 +195,7 @@ class WithDynamicSharedPip(basic_parts.DeferringToChild):
     child: Child to render.
     node_id: Node ID of the node we are rendering. Used for the warning and also
       looked up in `seen_more_than_once`.
-    seen_more_than_once: Reference to an externally-maintaned set of node IDs
+    seen_more_than_once: Reference to an externally-maintained set of node IDs
       we've seen more than once. Usually, this will be the same set from the
       active `_shared_object_ids_seen` context.
   """
