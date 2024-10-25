@@ -139,7 +139,7 @@ def render_array_data_to_html(
     cmap_data: list[tuple[int, int, int]],
     info: str = "",
     formatting_instructions: list[dict[str, Any]] | None = None,
-    dynamic_continous_cmap: bool = False,
+    dynamic_continuous_cmap: bool = False,
     raw_min_abs: float | None = None,
     raw_max_abs: float | None = None,
     pixels_per_cell: int | float = 7
@@ -165,7 +165,7 @@ def render_array_data_to_html(
       or click. These will be interpreted by `formatValueAndIndices` on the
       JavaScript side. Can assume each axis is named "a0", "a1", etc. when
       running in JavaScript.
-    dynamic_continous_cmap: Whether to dynamically adjust the colormap during
+    dynamic_continuous_cmap: Whether to dynamically adjust the colormap during
       rendering.
     raw_min_abs: Minimum absolute value of the array, for dynamic remapping.
     raw_max_abs: Maximum absolute value of the array, for dynamic remapping.
@@ -232,7 +232,7 @@ def render_array_data_to_html(
           "type": cmap_type,
           "min": vmin,
           "max": vmax,
-          "dynamic": dynamic_continous_cmap,
+          "dynamic": dynamic_continuous_cmap,
           "rawMinAbs": raw_min_abs,
           "rawMaxAbs": raw_max_abs,
           "cmapData": cmap_data,

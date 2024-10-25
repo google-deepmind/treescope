@@ -63,7 +63,7 @@ class ArrayAutovisualizer:
     edge_items: How many values to keep along each axis for truncated arrays.
     prefers_column: Names that should always be assigned to columns.
     prefers_row: Names that should always be assigned to rows.
-    around_zero: Whether to center continous data around zero.
+    around_zero: Whether to center continuous data around zero.
     force_continuous: Whether to always render integer arrays as continuous.
     include_repr_line_threshold: A threshold such that, if the `repr` of the
       array has fewer than that many lines, we will include that repr in the

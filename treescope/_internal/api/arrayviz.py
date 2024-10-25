@@ -689,7 +689,7 @@ def _render_pretruncated(
       cmap_data=colormap_data,
       info="".join(info_parts),
       formatting_instructions=formatting_instructions,
-      dynamic_continous_cmap=dynamic_colormap,
+      dynamic_continuous_cmap=dynamic_colormap,
       raw_min_abs=raw_min_abs,
       raw_max_abs=raw_max_abs,
       pixels_per_cell=pixels_per_cell,
@@ -968,7 +968,7 @@ def render_sharding_info(
           cmap_data=[],
           info=render_info_message,
           formatting_instructions=formatting_instructions,
-          dynamic_continous_cmap=False,
+          dynamic_continuous_cmap=False,
           raw_min_abs=0.0,
           raw_max_abs=0.0,
       )
