@@ -42,7 +42,7 @@ class IPythonVisualization:
 
   Attributes:
     display_object: An object to render, e.g. a figure.
-    replace: Whether to replace the subtree commpletely with this display
+    replace: Whether to replace the subtree completely with this display
       object. If False, the display object will be rendered below the object.
   """
 
