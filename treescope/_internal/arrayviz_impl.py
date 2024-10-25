@@ -466,7 +466,7 @@ def infer_balanced_truncation(
   Returns:
     A tuple of edge sizes. Each element corresponds to an axis in `shape`,
     and is either `None` (for no truncation) or an integer (corresponding to
-    the number of elements to keep at the beginning and and at the end).
+    the number of elements to keep at the beginning and at the end).
   """
   shape_arr = np.array(list(shape))
   remaining_elements_to_divide = maximum_size
