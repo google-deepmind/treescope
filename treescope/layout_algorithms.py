@@ -27,7 +27,7 @@ def expand_to_layout_marks(
     marks: Collection[Any],
     collapse_weak_others: bool,
 ) -> None:
-  """Expands a tree so that any part with a marker in the given set is fisible.
+  """Expands a tree so that any part with a marker in the given set is visible.
 
   This function ignores the existing expand state, and instead just ensures that
   every foldable node that contains a layout marker in `marks` is expanded.
