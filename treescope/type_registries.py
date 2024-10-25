@@ -55,7 +55,7 @@ be used to render any arrays of that type.
 
 If a type is not present in this registry, the entries of that type's `__mro__`
 will also be searched. Additionally, virtual base classes will be checked if
-the abtract base class is in `VIRTUAL_BASE_CLASSES`.
+the abstract base class is in `VIRTUAL_BASE_CLASSES`.
 
 NDArray adapters are usually looked up using the `lookup_ndarray_adapter`
 function, which will also check for the __treescope_ndarray_adapter__ method
@@ -67,7 +67,7 @@ TREESCOPE_HANDLER_REGISTRY: dict[type[Any], renderers.TreescopeNodeHandler] = {}
 
 If a type is not present in this registry, the entries of that type's `__mro__`
 will also be searched. Additionally, virtual base classes will be checked if
-the abtract base class is in `VIRTUAL_BASE_CLASSES`.
+the abstract base class is in `VIRTUAL_BASE_CLASSES`.
 
 The handler itself will be passed the object, and can either return a treescope
 rendering or the `NotImplemented` sentinel, just like an ordinary treescope
