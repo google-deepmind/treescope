@@ -870,7 +870,7 @@ def summarizable_condition(
     detail: Contents to render when either expanded or in roundtrip mode.
 
   Returns:
-    A renderable part that renders as ``summary`` when both collpased and not
+    A renderable part that renders as ``summary`` when both collapsed and not
     in roundtrip mode, and as ``detail`` otherwise.
   """
   if summary is None:
