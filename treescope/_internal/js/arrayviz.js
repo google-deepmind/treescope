@@ -607,7 +607,7 @@ const arrayviz = (() => {
     const valid_mask = deserializeUint8(validMaskBase64);
 
     // Compute separations between axis names that are mapped to the same
-    // physical axis (X or Y). Spaces follow the Fibbonacci sequence.
+    // physical axis (X or Y). Spaces follow the Fibonacci sequence.
     let old = 1;
     let current = 1;
     let seps = [0];
