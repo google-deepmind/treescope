@@ -614,7 +614,7 @@ class RoundtripCondition(RenderableTreePart):
 
   Attributes:
     roundtrip: Contents to render when rendering in round trip mode.
-    not_roundtrip: Contents to render when renderingin ordinary mode.
+    not_roundtrip: Contents to render when rendering in ordinary mode.
   """
 
   roundtrip: RenderableTreePart = EmptyPart()
@@ -721,7 +721,7 @@ def roundtrip_condition(
 
   Args:
     roundtrip: Contents to render when rendering in round trip mode.
-    not_roundtrip: Contents to render when renderingin ordinary mode.
+    not_roundtrip: Contents to render when rendering in ordinary mode.
 
   Returns:
     A renderable part that renders as ``roundtrip`` in roundtrip mode
