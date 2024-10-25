@@ -219,7 +219,7 @@ root.defns.insertContent = ((contentNode, compressed) => {
 </script></treescope-run-here>
 """
 
-STEP_TEMPATE = """
+STEP_TEMPLATE = """
 <div style="display:none">
 <template>{__REPLACE_ME_WITH_CONTENT_HTML__}</template>
 <treescope-run-here><script type="application/octet-stream">
@@ -255,7 +255,7 @@ this.parentNode.remove();
 </div>
 """
 
-STEALER_TEMPATE = """
+STEALER_TEMPLATE = """
 <treescope-run-here><script type="application/octet-stream">
 const root = (
   Array.from(document.getElementsByClassName(
@@ -340,7 +340,7 @@ def encapsulate_streaming_html(
       )
     else:
       step_content = (
-          _prep_html_js_and_strip_comments(STEP_TEMPATE)
+          _prep_html_js_and_strip_comments(STEP_TEMPLATE)
           .replace("{__REPLACE_ME_WITH_CONTAINER_ID_CLASS__}", unique_id_class)
           .replace("{__REPLACE_ME_WITH_STEP__}", str(i))
           .replace("{__REPLACE_ME_WITH_CONTENT_HTML__}", step_content)
@@ -356,7 +356,7 @@ def encapsulate_streaming_html(
     stream = io.StringIO()
 
   if stealable:
-    stealer_content = _prep_html_js_and_strip_comments(STEALER_TEMPATE).replace(
+    stealer_content = _prep_html_js_and_strip_comments(STEALER_TEMPLATE).replace(
         "{__REPLACE_ME_WITH_CONTAINER_ID_CLASS__}", unique_id_class
     )
     yield HTMLOutputSegment(
