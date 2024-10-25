@@ -32,7 +32,7 @@ When rendering HTML outputs in IPython notebooks, we want to support:
   interference between different renderings, and may allow rendering
   optimizations in some browsers.
 
-This module defines the necessarly logic to enable these features. It takes as
+This module defines the necessary logic to enable these features. It takes as
 input a sequence of HTML blobs that should be rendered into a single container
 in a streaming fashion, and transforms them into a new sequence of compressed,
 duplication-safe HTML blobs that first create the container and then render each
