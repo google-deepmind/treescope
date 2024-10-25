@@ -275,7 +275,7 @@ def infer_rows_and_columns(
 
   The unassigned axes are sorted by size and then assigned to rows and columns
   to try to balance the total number of elements along the row and column axes.
-  This curently uses a greedy algorithm with an adjustment to try to keep
+  This currently uses a greedy algorithm with an adjustment to try to keep
   columns longer than rows, except when there are exactly two axes and both are
   positional, in which case it lays out axis 0 as the rows and axis 1 as the
   columns.
