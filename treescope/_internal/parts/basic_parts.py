@@ -205,7 +205,7 @@ class Siblings(RenderableTreePart):
           at_beginning_of_line=at_beginning_of_line,
           render_context=render_context,
       )
-      # Only the first part gets beginning-of-line priveleges.
+      # Only the first part gets beginning-of-line privileges.
       at_beginning_of_line = False
 
   def render_to_text(
