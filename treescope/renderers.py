@@ -337,7 +337,7 @@ class TreescopeRenderer:
               ),
               annotations=rendering_parts.comment_color(
                   rendering_parts.text(
-                      "  # Error occured while formatting this object."
+                      "  # Error occurred while formatting this object."
                   )
               ),
           )

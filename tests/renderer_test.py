@@ -856,7 +856,7 @@ class TreescopeRendererTest(parameterized.TestCase):
         lowering.render_to_text_as_root(rendering),
         textwrap.dedent(f"""\
             [
-              {object.__repr__(target[0])},  # Error occured while formatting this object.
+              {object.__repr__(target[0])},  # Error occurred while formatting this object.
             ]"""),
     )
 
