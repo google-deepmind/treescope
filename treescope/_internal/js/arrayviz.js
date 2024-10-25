@@ -523,18 +523,18 @@ const arrayviz = (() => {
   /* Delays an action until a destination element becomes visible. */
   function _delayUntilVisible(destination, action) {
     // Trigger rendering as soon as the destination becomes visible.
-    const visiblityObserver = new IntersectionObserver((entries) => {
+    const visibilityObserver = new IntersectionObserver((entries) => {
       if (entries[0].intersectionRatio > 0) {
         const loadingMarkers = destination.querySelectorAll('.loading_message');
         action();
         for (let elt of loadingMarkers) {
           elt.remove();
         }
-        visiblityObserver.disconnect();
+        visibilityObserver.disconnect();
       }
     }, {});
     requestAnimationFrame(() => {
-      visiblityObserver.observe(destination);
+      visibilityObserver.observe(destination);
     });
   }
 
