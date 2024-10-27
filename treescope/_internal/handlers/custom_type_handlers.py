@@ -49,7 +49,7 @@ def handle_via_treescope_repr_method(
   Args:
     node: The node to render.
     path: An optional path to this node from the root.
-    subtree_renderer: The renderer for sutrees of this node.
+    subtree_renderer: The renderer for subtrees of this node.
     method_name: Optional override for the name of the method to call. This is
       primarily intended for compatibility with treescope's original
       implementation as part of Penzai, which used __penzai_repr__.
@@ -90,7 +90,7 @@ def handle_via_global_registry(
   Args:
     node: The node to render.
     path: An optional path to this node from the root.
-    subtree_renderer: The renderer for sutrees of this node.
+    subtree_renderer: The renderer for subtrees of this node.
 
   Returns:
     A rendering of this node, if it was found in the global registry.
