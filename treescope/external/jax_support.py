@@ -474,7 +474,7 @@ class JAXArrayAdapter(ndarray_adapters.NDArrayAdapter[jax.Array]):
       array: jax.Array,
       mask: jax.Array | None,
       edge_items_per_axis: tuple[int | None, ...],
-  ) -> tuple[np.ndaray, np.ndarray]:
+  ) -> tuple[np.ndarray, np.ndarray]:
     assert jax is not None, "JAX is not available."
     assert not isinstance(array, jax.core.Tracer)
     assert not array.is_deleted()
