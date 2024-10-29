@@ -306,6 +306,8 @@ def register_as_default(
     assert output_stealer is not None
     return output_stealer
 
+  # TEST CHANGE 2
+
   display_formatter = IPython.get_ipython().display_formatter
   cur_html_formatter = display_formatter.formatters["text/html"]
   cur_html_formatter.for_type(object, _render_for_ipython)

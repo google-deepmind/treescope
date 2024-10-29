@@ -382,6 +382,8 @@ def _render_to_html_as_root_streaming(
       )
       stream.write("</span></div>")
 
+    # TEST CHANGE 3
+
     all_ids = [deferred.placeholder.replacement_id for deferred in deferreds]
     # It's sometimes important to preserve node identity when inserting
     # deferred objects, for instance if we've already registered event listeners
