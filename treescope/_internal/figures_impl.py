@@ -43,7 +43,7 @@ class TreescopeFigure:
     return lowering.render_to_html_as_root(self.treescope_part, compressed=True)
 
   def _repr_pretty_(self, p, cycle):
-    """Builds a representation of this part for the IPython text prettyprinter."""
+    """Builds a representation of this part for the IPython prettyprinter."""
     del cycle
     p.text(lowering.render_to_text_as_root(self.treescope_part))
 

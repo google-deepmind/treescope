@@ -28,13 +28,13 @@ from treescope import renderers
 from treescope import rendering_parts
 from treescope import type_registries
 
-# pylint: disable=g-import-not-at-top
+# pylint: disable=import-outside-toplevel
 try:
   import torch  # pytype: disable=import-error
 except ImportError:
   assert not typing.TYPE_CHECKING
   torch = None
-# pylint: enable=g-import-not-at-top
+# pylint: enable=import-outside-toplevel
 
 show_dynamic_attributes: context.ContextualValue[bool] = (
     context.ContextualValue(

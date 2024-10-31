@@ -19,16 +19,13 @@ These handlers provide:
 - visualization of closure variables for closures
 """
 
-import dataclasses
 import functools
 import inspect
-import io
 import re
 from typing import Any
 
 from treescope import renderers
 from treescope import rendering_parts
-from treescope._internal import html_escaping
 
 
 @functools.cache
@@ -72,7 +69,7 @@ def handle_code_objects_with_reflection(
     | rendering_parts.RenderableAndLineAnnotations
     | type(NotImplemented)
 ):
-  """Renders code objects using source-code reflection and closure inspection."""
+  """Renders code objects using reflection and closure inspection."""
   if inspect.isclass(node):
     # Render class.
     closure_vars = None

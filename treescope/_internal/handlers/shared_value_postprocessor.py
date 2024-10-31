@@ -83,6 +83,7 @@ class SharedWarningLabel(basic_parts.BaseSpanGroup):
   def _span_css_rule(
       self, setup_context: part_interface.HtmlContextForSetup
   ) -> part_interface.CSSStyleRule:
+    del setup_context
     return part_interface.CSSStyleRule(
         html_escaping.without_repeated_whitespace("""
             .shared_warning_label

@@ -231,7 +231,7 @@ class ArrayAutovisualizer:
     else:
       last_line = rendering_parts.text(">")
     custom_rendering = rendering_parts.build_custom_foldable_tree_node(
-        label=rendering_parts.abbreviation_color(label),
+        label=rendering_parts.abbreviation_color(rendering_parts.text(label)),
         contents=rendering_parts.siblings(
             rendering_parts.fold_condition(
                 expanded=rendering_parts.indented_children(outputs)
@@ -279,9 +279,7 @@ class ArrayAutovisualizer:
         if expand_state is None:
           expand_state = rendering_parts.ExpandState.WEAKLY_EXPANDED
         summary = adapter.get_array_summary(value, fast=False)
-        label = rendering_parts.abbreviation_color(
-            rendering_parts.text(f"<{summary}")
-        )
+        label = f"<{summary}"
         return self._autovisualize_array(
             value, adapter, path, label, expand_state
         )
@@ -298,7 +296,7 @@ class ArrayAutovisualizer:
     # Not an array in the registry. But it might be a JAX sharding that we can
     # visualize (if JAX is imported).
     if "jax" in sys.modules:
-      import jax  # pylint: disable=g-import-not-at-top
+      import jax  # pylint: disable=import-outside-toplevel
 
       if isinstance(
           value,

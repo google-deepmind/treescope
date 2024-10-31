@@ -56,7 +56,6 @@ class HasReprHtml(abc.ABC):
   @abc.abstractmethod
   def _repr_html_(self) -> str | tuple[str, Any]:
     """Returns a rich HTML representation of an object."""
-    ...
 
   @classmethod
   def __subclasshook__(cls, subclass, /):

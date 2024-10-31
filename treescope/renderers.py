@@ -51,7 +51,6 @@ class TreescopeSubtreeRenderer(typing.Protocol):
       A representation of the object as a renderable tree part in the
       intermediate representation.
     """
-    ...
 
 
 class TreescopeNodeHandler(typing.Protocol):
@@ -132,7 +131,6 @@ class TreescopeCustomWrapperHook(typing.Protocol):
       hook does not want to modify this rendering at all. (Returning
       NotImplemented)
     """
-    ...
 
 
 @dataclasses.dataclass

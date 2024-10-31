@@ -49,7 +49,9 @@ def build_custom_foldable_tree_node(
     contents: RenderableTreePart,
     path: str | None = None,
     label: RenderableTreePart = basic_parts.EmptyPart(),
-    expand_state: part_interface.ExpandState = part_interface.ExpandState.WEAKLY_COLLAPSED,
+    expand_state: part_interface.ExpandState = (
+        part_interface.ExpandState.WEAKLY_COLLAPSED
+    ),
 ) -> RenderableAndLineAnnotations:
   """Builds a custom foldable tree node with path buttons.
 
@@ -141,7 +143,9 @@ def build_foldable_tree_node_from_children(
     background_color: str | None = None,
     background_pattern: str | None = None,
     first_line_annotation: RenderableTreePart | None = None,
-    expand_state: part_interface.ExpandState = part_interface.ExpandState.WEAKLY_COLLAPSED,
+    expand_state: part_interface.ExpandState = (
+        part_interface.ExpandState.WEAKLY_COLLAPSED
+    ),
 ) -> RenderableAndLineAnnotations:
   """Builds a foldable tree node with path buttons.
 

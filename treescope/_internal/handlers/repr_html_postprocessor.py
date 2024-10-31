@@ -84,7 +84,7 @@ def append_repr_html_when_present(
       )
     else:
       return rendering_parts.error_color(
-          "# (couldn't compute HTML representation)"
+          rendering_parts.text("# (couldn't compute HTML representation)")
       )
 
   iframe_rendering = lowering.maybe_defer_rendering(

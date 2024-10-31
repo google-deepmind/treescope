@@ -62,13 +62,13 @@ def use_autovisualizer_if_present(
       ordinary_result = node_renderer(node, path)
 
     if isinstance(result, IPythonVisualization):
-      if isinstance(result.display_object, figures_impl.TreescopeFigure):
-        ipy_rendering = result.display_object.treescope_part
-      elif isinstance(result.display_object, object_inspection.HasReprHtml):
-        obj = result.display_object
+      display_obj = result.display_object
+      if isinstance(display_obj, figures_impl.TreescopeFigure):
+        ipy_rendering = display_obj.treescope_part
+      elif isinstance(display_obj, object_inspection.HasReprHtml):
 
         def _thunk(_):
-          html_rendering = object_inspection.to_html(obj)
+          html_rendering = object_inspection.to_html(display_obj)
           if html_rendering:
             return rendering_parts.embedded_iframe(
                 embedded_html=html_rendering,
@@ -80,7 +80,7 @@ def use_autovisualizer_if_present(
             return rendering_parts.error_color(
                 rendering_parts.text(
                     "<Autovisualizer returned a Visualization with an invalid"
-                    f" display object {result.display_object}>"
+                    f" display object {display_obj}>"
                 )
             )
 
@@ -96,7 +96,7 @@ def use_autovisualizer_if_present(
             line=rendering_parts.error_color(
                 rendering_parts.text(
                     "<Autovisualizer returned a Visualization with an invalid"
-                    f" display object {result.display_object}>"
+                    f" display object {display_obj}>"
                 )
             ),
             path=path,
