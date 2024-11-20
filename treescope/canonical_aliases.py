@@ -296,7 +296,7 @@ def lookup_alias(
   """
   if the_object is None:
     # None itself should never have an alias. Checking for it here lets us
-    # easly catch the "broken alias" case in `retrieve` below.
+    # easily catch the "broken alias" case in `retrieve` below.
     return None
 
   alias_env = _alias_environment.get()

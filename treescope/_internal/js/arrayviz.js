@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Javascript implementation of arrayviz.
+ * @fileoverview JavaScript implementation of arrayviz.
  * This file is inserted into the generated Treescope HTML when arrayviz is
  * used from Python.
  */
@@ -523,18 +523,18 @@ const arrayviz = (() => {
   /* Delays an action until a destination element becomes visible. */
   function _delayUntilVisible(destination, action) {
     // Trigger rendering as soon as the destination becomes visible.
-    const visiblityObserver = new IntersectionObserver((entries) => {
+    const visibilityObserver = new IntersectionObserver((entries) => {
       if (entries[0].intersectionRatio > 0) {
         const loadingMarkers = destination.querySelectorAll('.loading_message');
         action();
         for (let elt of loadingMarkers) {
           elt.remove();
         }
-        visiblityObserver.disconnect();
+        visibilityObserver.disconnect();
       }
     }, {});
     requestAnimationFrame(() => {
-      visiblityObserver.observe(destination);
+      visibilityObserver.observe(destination);
     });
   }
 
@@ -607,7 +607,7 @@ const arrayviz = (() => {
     const valid_mask = deserializeUint8(validMaskBase64);
 
     // Compute separations between axis names that are mapped to the same
-    // physical axis (X or Y). Spaces follow the Fibbonacci sequence.
+    // physical axis (X or Y). Spaces follow the Fibonacci sequence.
     let old = 1;
     let current = 1;
     let seps = [0];

@@ -14,7 +14,7 @@
 
 """Stable high-level interface for building object reprs.
 
-These functions simplify the process of implmenting `__treescope_repr__` for
+These functions simplify the process of implementing `__treescope_repr__` for
 custom types, allowing them to integrate with treescope. This interface will be
 stable across treescope releases, and may be expanded in the future to support
 additional customization.

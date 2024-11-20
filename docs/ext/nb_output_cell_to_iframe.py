@@ -14,7 +14,7 @@
 """Wraps MyST-nb output cells in HTML templates.
 
 This can be used to sandbox the environment of output cell renderings, which is
-useful for Treescope renderings since they make heavy use of Javascript and CSS,
+useful for Treescope renderings since they make heavy use of JavaScript and CSS,
 and can also improve responsiveness of the main page.
 
 This transformation replaces output cells with ``<template>`` elements tagged

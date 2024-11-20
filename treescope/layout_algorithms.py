@@ -27,7 +27,7 @@ def expand_to_layout_marks(
     marks: Collection[Any],
     collapse_weak_others: bool,
 ) -> None:
-  """Expands a tree so that any part with a marker in the given set is fisible.
+  """Expands a tree so that any part with a marker in the given set is visible.
 
   This function ignores the existing expand state, and instead just ensures that
   every foldable node that contains a layout marker in `marks` is expanded.
@@ -106,7 +106,7 @@ def expand_for_balanced_layout(
 
   A balanced layout tries to evenly allocate space along vertical and horizontal
   axes. Similar to many pretty-printers, nodes are usually expanded to avoid
-  long lines and make them fit comforatbly within `target_width` characters.
+  long lines and make them fit comfortably within `target_width` characters.
   However, there is also a `max_height` parameter that takes precedence, which
   can be used to prevent outputs from being too large for very large objects,
   and makes it easier for users to interactively expand only the subtrees that

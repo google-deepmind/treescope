@@ -139,7 +139,7 @@ def render_array_data_to_html(
     cmap_data: list[tuple[int, int, int]],
     info: str = "",
     formatting_instructions: list[dict[str, Any]] | None = None,
-    dynamic_continous_cmap: bool = False,
+    dynamic_continuous_cmap: bool = False,
     raw_min_abs: float | None = None,
     raw_max_abs: float | None = None,
     pixels_per_cell: int | float = 7,
@@ -165,7 +165,7 @@ def render_array_data_to_html(
       or click. These will be interpreted by `formatValueAndIndices` on the
       JavaScript side. Can assume each axis is named "a0", "a1", etc. when
       running in JavaScript.
-    dynamic_continous_cmap: Whether to dynamically adjust the colormap during
+    dynamic_continuous_cmap: Whether to dynamically adjust the colormap during
       rendering.
     raw_min_abs: Minimum absolute value of the array, for dynamic remapping.
     raw_max_abs: Maximum absolute value of the array, for dynamic remapping.
@@ -232,7 +232,7 @@ def render_array_data_to_html(
           "type": cmap_type,
           "min": vmin,
           "max": vmax,
-          "dynamic": dynamic_continous_cmap,
+          "dynamic": dynamic_continuous_cmap,
           "rawMinAbs": raw_min_abs,
           "rawMaxAbs": raw_max_abs,
           "cmapData": cmap_data,
@@ -275,7 +275,7 @@ def infer_rows_and_columns(
 
   The unassigned axes are sorted by size and then assigned to rows and columns
   to try to balance the total number of elements along the row and column axes.
-  This curently uses a greedy algorithm with an adjustment to try to keep
+  This currently uses a greedy algorithm with an adjustment to try to keep
   columns longer than rows, except when there are exactly two axes and both are
   positional, in which case it lays out axis 0 as the rows and axis 1 as the
   columns.
@@ -466,7 +466,7 @@ def infer_balanced_truncation(
   Returns:
     A tuple of edge sizes. Each element corresponds to an axis in `shape`,
     and is either `None` (for no truncation) or an integer (corresponding to
-    the number of elements to keep at the beginning and and at the end).
+    the number of elements to keep at the beginning and at the end).
   """
   shape_arr = np.array(list(shape))
   remaining_elements_to_divide = maximum_size

@@ -141,7 +141,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_text_roundtrip_collapsed='',
           expected_text_roundtrip_expanded='',
           expected_html='',
-          expected_html_at_begining='',
+          expected_html_at_beginning='',
       ),
       dict(
           testcase_name='single_line_text',
@@ -156,7 +156,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_text_roundtrip_collapsed='some text with characters < > &',
           expected_text_roundtrip_expanded='some text with characters < > &',
           expected_html='some text with characters &lt; &gt; &amp;',
-          expected_html_at_begining='some text with characters &lt; &gt; &amp;',
+          expected_html_at_beginning='some text with characters &lt; &gt; &amp;',
       ),
       dict(
           testcase_name='siblings',
@@ -191,7 +191,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               '[mock A, e:y r:y][mock B, e:y r:y][mock C, e:y r:y]'
           ),
           expected_html='[mock A, b:n][mock B, b:n][mock C, b:n]',
-          expected_html_at_begining='[mock A, b:y][mock B, b:n][mock C, b:n]',
+          expected_html_at_beginning='[mock A, b:y][mock B, b:n][mock C, b:n]',
       ),
       dict(
           testcase_name='tagged_group',
@@ -208,7 +208,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_text_roundtrip_collapsed='[mock A, e:n r:y]',
           expected_text_roundtrip_expanded='[mock A, e:y r:y]',
           expected_html='[mock A, b:n]',
-          expected_html_at_begining='[mock A, b:y]',
+          expected_html_at_beginning='[mock A, b:y]',
       ),
       dict(
           testcase_name='span_group_1',
@@ -228,7 +228,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_html=(
               '<span class="test_span_css_class">[mock A, b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="test_span_css_class">[mock A, b:y]</span>'
           ),
       ),
@@ -251,7 +251,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_html=(
               '<span class="test_span_css_class">[mock A, b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="test_span_css_class">[mock A, b:y]</span>'
           ),
       ),
@@ -270,7 +270,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_text_roundtrip_collapsed='[mock A, e:n r:y]',
           expected_text_roundtrip_expanded='',
           expected_html='<span class="when_collapsed">[mock A, b:n]</span>',
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_collapsed">[mock A, b:y]</span>'
           ),
       ),
@@ -289,7 +289,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_text_roundtrip_collapsed='',
           expected_text_roundtrip_expanded='[mock B, e:y r:y]',
           expected_html='<span class="when_expanded">[mock B, b:n]</span>',
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_expanded">[mock B, b:y]</span>'
           ),
       ),
@@ -316,7 +316,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               '<span class="when_collapsed">[mock B, b:n]</span><span'
               ' class="when_expanded">[mock A, b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_collapsed">[mock B, b:y]</span><span'
               ' class="when_expanded">[mock A, b:y]</span>'
           ),
@@ -336,7 +336,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_text_roundtrip_collapsed='[mock A, e:n r:y]',
           expected_text_roundtrip_expanded='[mock A, e:y r:y]',
           expected_html='<span class="when_roundtrip">[mock A, b:n]</span>',
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_roundtrip">[mock A, b:y]</span>'
           ),
       ),
@@ -355,7 +355,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_text_roundtrip_collapsed='',
           expected_text_roundtrip_expanded='',
           expected_html='<span class="when_not_roundtrip">[mock B, b:n]</span>',
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_not_roundtrip">[mock B, b:y]</span>'
           ),
       ),
@@ -382,7 +382,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               '<span class="when_roundtrip">[mock A, b:n]</span><span'
               ' class="when_not_roundtrip">[mock B, b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_roundtrip">[mock A, b:y]</span><span'
               ' class="when_not_roundtrip">[mock B, b:y]</span>'
           ),
@@ -405,7 +405,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               '<span class="when_collapsed_and_not_roundtrip">[mock A,'
               ' b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_collapsed_and_not_roundtrip">[mock A,'
               ' b:y]</span>'
           ),
@@ -427,7 +427,7 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_html=(
               '<span class="when_expanded_or_roundtrip">[mock B, b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_expanded_or_roundtrip">[mock B, b:y]</span>'
           ),
       ),
@@ -455,7 +455,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               ' b:n]</span><span class="when_expanded_or_roundtrip">[mock B,'
               ' b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="when_collapsed_and_not_roundtrip">[mock A,'
               ' b:y]</span><span class="when_expanded_or_roundtrip">[mock B,'
               ' b:y]</span>'
@@ -507,7 +507,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               ' class="separate_lines_child">[mock B, b:y]</span><span'
               ' class="separate_lines_child">[mock C, b:y]</span></span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="separate_lines_children"><span'
               ' class="separate_lines_child">[mock A, b:y]</span><span'
               ' class="separate_lines_child">[mock B, b:y]</span><span'
@@ -560,7 +560,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               ' class="indented_child">[mock B, b:y]</span><span'
               ' class="indented_child">[mock C, b:y]</span></span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="indented_children"><span'
               ' class="indented_child">[mock A, b:y]</span><span'
               ' class="indented_child">[mock B, b:y]</span><span'
@@ -602,7 +602,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               ' class="box_with_outline" style="--foo: &quot;1&quot;;">[mock A,'
               ' b:y]</span></span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="outerbox_for_outline"><span'
               ' class="box_with_outline" style="--foo: &quot;1&quot;;">[mock A,'
               ' b:y]</span></span>'
@@ -630,7 +630,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               '<span class="has_hover_tooltip"'
               ' data-tooltip="test_tooltip">[mock A, b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span class="has_hover_tooltip"'
               ' data-tooltip="test_tooltip">[mock A, b:y]</span>'
           ),
@@ -657,7 +657,7 @@ class RepresentationPartsTest(parameterized.TestCase):
               '<span tabindex="-1" class="scoped_unselectable">[mock A,'
               ' b:n]</span>'
           ),
-          expected_html_at_begining=(
+          expected_html_at_beginning=(
               '<span tabindex="-1" class="scoped_unselectable">[mock A,'
               ' b:y]</span>'
           ),
@@ -677,7 +677,7 @@ class RepresentationPartsTest(parameterized.TestCase):
       expected_text_roundtrip_collapsed: str,
       expected_text_roundtrip_expanded: str,
       expected_html: str,
-      expected_html_at_begining: str,
+      expected_html_at_beginning: str,
       indent: int = 0,
   ):
     with self.subTest('collapsed_width'):
@@ -756,7 +756,7 @@ class RepresentationPartsTest(parameterized.TestCase):
     with self.subTest('html_at_beginning'):
       stream = io.StringIO()
       part.render_to_html(stream, at_beginning_of_line=True, render_context={})
-      self.assertEqual(stream.getvalue(), expected_html_at_begining)
+      self.assertEqual(stream.getvalue(), expected_html_at_beginning)
 
   def test_multiline_text_part(self):
     part = basic_parts.Text('some text\nsecond line\nthird line')

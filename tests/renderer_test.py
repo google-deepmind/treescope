@@ -856,7 +856,7 @@ class TreescopeRendererTest(parameterized.TestCase):
         lowering.render_to_text_as_root(rendering),
         textwrap.dedent(f"""\
             [
-              {object.__repr__(target[0])},  # Error occured while formatting this object.
+              {object.__repr__(target[0])},  # Error occurred while formatting this object.
             ]"""),
     )
 
@@ -898,7 +898,7 @@ class TreescopeRendererTest(parameterized.TestCase):
       if isinstance(node, str):
         return treescope.VisualizationFromTreescopePart(
             rendering_parts.RenderableAndLineAnnotations(
-                rendering_parts.text("(visualiation for foo goes here)"),
+                rendering_parts.text("(visualization for foo goes here)"),
                 rendering_parts.text(" # annotation for vis for foo"),
             ),
         )
@@ -920,7 +920,7 @@ class TreescopeRendererTest(parameterized.TestCase):
       if node == 6:
         return treescope.VisualizationFromTreescopePart(
             rendering_parts.RenderableAndLineAnnotations(
-                rendering_parts.text("(child visualiation of 6 goes here)"),
+                rendering_parts.text("(child visualization of 6 goes here)"),
                 rendering_parts.text(" # annotation for vis for 6"),
             ),
         )
@@ -942,7 +942,7 @@ class TreescopeRendererTest(parameterized.TestCase):
             [
               1,
               2,
-              (visualiation for foo goes here), # annotation for vis for foo
+              (visualization for foo goes here), # annotation for vis for foo
               3,
               <Visualization of int:
                 <rich HTML visualization>
@@ -953,7 +953,7 @@ class TreescopeRendererTest(parameterized.TestCase):
               #╰┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄╯
               ,
               [
-                (child visualiation of 6 goes here), # annotation for vis for 6
+                (child visualization of 6 goes here), # annotation for vis for 6
                 7,
               ],
             ]"""),

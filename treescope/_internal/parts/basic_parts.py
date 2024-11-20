@@ -205,7 +205,7 @@ class Siblings(RenderableTreePart):
           at_beginning_of_line=at_beginning_of_line,
           render_context=render_context,
       )
-      # Only the first part gets beginning-of-line priveleges.
+      # Only the first part gets beginning-of-line privileges.
       at_beginning_of_line = False
 
   def render_to_text(
@@ -614,7 +614,7 @@ class RoundtripCondition(RenderableTreePart):
 
   Attributes:
     roundtrip: Contents to render when rendering in round trip mode.
-    not_roundtrip: Contents to render when renderingin ordinary mode.
+    not_roundtrip: Contents to render when rendering in ordinary mode.
   """
 
   roundtrip: RenderableTreePart = EmptyPart()
@@ -721,7 +721,7 @@ def roundtrip_condition(
 
   Args:
     roundtrip: Contents to render when rendering in round trip mode.
-    not_roundtrip: Contents to render when renderingin ordinary mode.
+    not_roundtrip: Contents to render when rendering in ordinary mode.
 
   Returns:
     A renderable part that renders as ``roundtrip`` in roundtrip mode
@@ -870,7 +870,7 @@ def summarizable_condition(
     detail: Contents to render when either expanded or in roundtrip mode.
 
   Returns:
-    A renderable part that renders as ``summary`` when both collpased and not
+    A renderable part that renders as ``summary`` when both collapsed and not
     in roundtrip mode, and as ``detail`` otherwise.
   """
   if summary is None:

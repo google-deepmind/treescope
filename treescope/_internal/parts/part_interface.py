@@ -45,7 +45,7 @@ class CSSStyleRule:
 
 @dataclasses.dataclass(frozen=True, order=True)
 class JavaScriptDefn:
-  """A Javascript function definition (or set of definitions).
+  """A JavaScript function definition (or set of definitions).
 
   The contents of `source` will be inserted into a <script> block in the
   rendered tree. Functions that need to be referenced by event handlers can
