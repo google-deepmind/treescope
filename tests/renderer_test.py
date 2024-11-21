@@ -18,6 +18,7 @@ import ast
 import collections
 import dataclasses
 import functools
+import re
 import textwrap
 import types
 from typing import Any, Callable
@@ -553,11 +554,16 @@ class TreescopeRendererTest(parameterized.TestCase):
 
     renderer = treescope.active_renderer.get()
     # Render it to IR.
-    rendering = rendering_parts.build_full_line_with_annotations(
-        renderer.to_foldable_representation(
-            target, ignore_exceptions=ignore_exceptions
-        )
-    )
+    with warnings.catch_warnings():
+      if ignore_exceptions:
+        # Also ignore warnings due to ignoring exceptions to avoid cluttering
+        # logs.
+        warnings.simplefilter("ignore")
+      rendering = rendering_parts.build_full_line_with_annotations(
+          renderer.to_foldable_representation(
+              target, ignore_exceptions=ignore_exceptions
+          )
+      )
 
     # Collapse all foldables.
     layout_algorithms.expand_to_depth(rendering, 0)
@@ -676,8 +682,8 @@ class TreescopeRendererTest(parameterized.TestCase):
               <custom repr for UnknownPytreeNode: x=1234, y=5678>
                 #╭┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄╮
                 # PyTree children:
-                  GetAttrKey(name='x'): 1234,
-                  'custom_key': 5678,
+                  FrozenDataclassKey(name='x'): 1234,
+                  'string_key': 5678,
                 #╰┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄╯
               ,  # {object.__repr__(target[0])}
             ]"""),
@@ -712,9 +718,19 @@ class TreescopeRendererTest(parameterized.TestCase):
     ):
       renderer.to_foldable_representation(target)
 
-    rendering = rendering_parts.build_full_line_with_annotations(
-        renderer.to_foldable_representation(target, ignore_exceptions=True)
-    )
+    with self.assertWarnsRegex(
+        UserWarning,
+        "(.|\n)*".join([
+            re.escape("Ignoring error while formatting value of type"),
+            re.escape("ObjectWithCustomHandlerThatThrows"),
+            re.escape(
+                'raise RuntimeError("Simulated treescope_repr failure!")'
+            ),
+        ]),
+    ):
+      rendering = rendering_parts.build_full_line_with_annotations(
+          renderer.to_foldable_representation(target, ignore_exceptions=True)
+      )
 
     layout_algorithms.expand_to_depth(rendering, 0)
     self.assertEqual(
@@ -842,9 +858,17 @@ class TreescopeRendererTest(parameterized.TestCase):
     ):
       renderer.to_foldable_representation(target)
 
-    rendering = rendering_parts.build_full_line_with_annotations(
-        renderer.to_foldable_representation(target, ignore_exceptions=True)
-    )
+    with self.assertWarnsRegex(
+        UserWarning,
+        "(.|\n)*".join([
+            re.escape("Ignoring error while formatting value of type"),
+            re.escape("ObjectWithReprThatThrows"),
+            re.escape('raise RuntimeError("Simulated repr failure!")'),
+        ]),
+    ):
+      rendering = rendering_parts.build_full_line_with_annotations(
+          renderer.to_foldable_representation(target, ignore_exceptions=True)
+      )
 
     layout_algorithms.expand_to_depth(rendering, 0)
     self.assertEqual(
