@@ -351,16 +351,16 @@ def infer_rows_and_columns(
       row_size *= axis_size
 
   # The specific ordering of axes along the rows and the columns is somewhat
-  # arbitrary. Re-order each so that they have positional then named axes, and
-  # so that position axes are in reverse position order, and the explicitly
-  # mentioned named axes are before the unassigned ones.
+  # arbitrary. Re-order each so that explicitly requested axes are first, then
+  # unassigned positional axes in reverse position order, then unassigned named
+  # axes.
   def ax_sort_key(ax: AxisInfo):
-    if isinstance(ax, PositionalAxisInfo | NamedPositionalAxisInfo):
-      return (0, -ax.axis_logical_index)
-    elif ax in unassigned:
-      return (2,)
+    if ax not in unassigned:
+      return (0,)
+    elif isinstance(ax, PositionalAxisInfo | NamedPositionalAxisInfo):
+      return (1, -ax.axis_logical_index)
     else:
-      return (1,)
+      return (2,)
 
   return sorted(rows, key=ax_sort_key), sorted(columns, key=ax_sort_key)
 
