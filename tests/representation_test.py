@@ -156,7 +156,9 @@ class RepresentationPartsTest(parameterized.TestCase):
           expected_text_roundtrip_collapsed='some text with characters < > &',
           expected_text_roundtrip_expanded='some text with characters < > &',
           expected_html='some text with characters &lt; &gt; &amp;',
-          expected_html_at_beginning='some text with characters &lt; &gt; &amp;',
+          expected_html_at_beginning=(
+              'some text with characters &lt; &gt; &amp;'
+          ),
       ),
       dict(
           testcase_name='siblings',

@@ -356,9 +356,9 @@ def encapsulate_streaming_html(
     stream = io.StringIO()
 
   if stealable:
-    stealer_content = _prep_html_js_and_strip_comments(STEALER_TEMPLATE).replace(
-        "{__REPLACE_ME_WITH_CONTAINER_ID_CLASS__}", unique_id_class
-    )
+    stealer_content = _prep_html_js_and_strip_comments(
+        STEALER_TEMPLATE
+    ).replace("{__REPLACE_ME_WITH_CONTAINER_ID_CLASS__}", unique_id_class)
     yield HTMLOutputSegment(
         html_src=stealer_content,
         segment_type=SegmentType.FINAL_OUTPUT_STEALER,

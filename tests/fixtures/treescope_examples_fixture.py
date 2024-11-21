@@ -206,6 +206,7 @@ class ObjectWithCustomHandlerThatThrowsDeferred:
 
   def __treescope_repr__(self, path, subtree_renderer):
     del path, subtree_renderer
+
     def _internal_main_thunk(layout_decision):
       del layout_decision
       raise RuntimeError("Simulated deferred treescope_repr failure!")

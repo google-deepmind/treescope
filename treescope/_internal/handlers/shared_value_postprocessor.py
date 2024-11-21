@@ -215,9 +215,13 @@ class WithDynamicSharedPip(basic_parts.DeferringToChild):
                 {{
                     padding-right: 1ch;
                     margin-right: -0.5ch;
-                    background: linear-gradient(135deg, orange 0 0.6ch, transparent 0.6ch );
+                    background: linear-gradient(
+                        135deg, orange 0 0.6ch, transparent 0.6ch
+                    );
                 }}
-                .shared_warning_pip.is_first_on_line:not({setup_context.collapsed_selector} *)
+                .shared_warning_pip.is_first_on_line:not(
+                    {setup_context.collapsed_selector} *
+                )
                 {{
                     margin-left: -0.5ch;
                 }}
