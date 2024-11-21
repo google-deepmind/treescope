@@ -132,6 +132,11 @@ class SomethingCallable:
 some_callable_block = SomethingCallable()
 
 
+@dataclasses.dataclass(frozen=True)
+class FrozenDataclassKey:
+  name: str
+
+
 @jax.tree_util.register_pytree_with_keys_class
 class UnknownPytreeNode:
   """A Pytree node treescope doesn't know."""
@@ -145,7 +150,7 @@ class UnknownPytreeNode:
 
   def tree_flatten_with_keys(self):
     return (
-        ((jax.tree_util.GetAttrKey("x"), self.x), ("custom_key", self.y)),
+        ((FrozenDataclassKey("x"), self.x), ("string_key", self.y)),
         "example_pytree_aux_data",
     )
 
