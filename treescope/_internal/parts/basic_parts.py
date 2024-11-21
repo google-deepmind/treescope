@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import abc
+from collections.abc import Hashable
 import dataclasses
 import functools
 import html
@@ -24,7 +25,7 @@ import io
 import itertools
 import operator
 import typing
-from typing import Any, Hashable, Sequence
+from typing import Any, Sequence
 
 from treescope._internal import html_escaping
 from treescope._internal.parts import part_interface

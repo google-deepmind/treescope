@@ -409,12 +409,14 @@ def _summarize_array_data_unconditionally(array: jax.Array) -> list[str]:
     stat = compute_summary(array, is_floating, is_integer, is_bool)
     # Get values in parallel.
     stat = jax.device_get(stat)
+    # pylint: disable=inconsistent-quotes
     if is_floating and stat["any_finite"]:
       output_parts.append(f" ≈{stat['mean']:.2} ±{stat['std']:.2}")
       output_parts.append(f" [≥{stat['nanmin']:.2}, ≤{stat['nanmax']:.2}]")
 
     if is_integer:
       output_parts.append(f" [≥{stat['min']:_d}, ≤{stat['max']:_d}]")
+    # pylint: enable=inconsistent-quotes
 
     def append_if_present(output_parts, *names):
       for name in names:
