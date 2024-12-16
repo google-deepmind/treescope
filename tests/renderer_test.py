@@ -462,6 +462,61 @@ class TreescopeRendererTest(parameterized.TestCase):
           expected_roundtrip_collapsed="[jax.lax.Precision.HIGHEST]",
       ),
       dict(
+          testcase_name="jax_ShapeDtypeStruct",
+          target=jax.ShapeDtypeStruct(shape=(1, 2), dtype=jnp.float32),
+          expected_collapsed=(
+              "ShapeDtypeStruct(shape=(1, 2), dtype=dtype('float32'))"
+          ),
+          expected_expanded=textwrap.dedent("""\
+              ShapeDtypeStruct(
+                shape=(1, 2),
+                dtype=dtype('float32'),
+              )"""),
+          expected_roundtrip_collapsed=(
+              "jax.ShapeDtypeStruct(shape=(1, 2), dtype=np.dtype('float32'))"
+          ),
+      ),
+      dict(
+          testcase_name="jax_SequenceKey",
+          target=jax.tree_util.SequenceKey(42),
+          expected_collapsed="SequenceKey(idx=42)",
+          expected_expanded=textwrap.dedent("""\
+              SequenceKey(
+                idx=42,
+              )"""),
+          expected_roundtrip_collapsed="jax.tree_util.SequenceKey(idx=42)",
+      ),
+      dict(
+          testcase_name="jax_DictKey",
+          target=jax.tree_util.DictKey("a"),
+          expected_collapsed="DictKey(key='a')",
+          expected_expanded=textwrap.dedent("""\
+              DictKey(
+                key='a',
+              )"""),
+          expected_roundtrip_collapsed="jax.tree_util.DictKey(key='a')",
+      ),
+      dict(
+          testcase_name="jax_GetAttrKey",
+          target=jax.tree_util.GetAttrKey("a"),
+          expected_collapsed="GetAttrKey(name='a')",
+          expected_expanded=textwrap.dedent("""\
+              GetAttrKey(
+                name='a',
+              )"""),
+          expected_roundtrip_collapsed="jax.tree_util.GetAttrKey(name='a')",
+      ),
+      dict(
+          testcase_name="jax_FlattenedIndexKey",
+          target=jax.tree_util.FlattenedIndexKey(3),
+          expected_collapsed="FlattenedIndexKey(key=3)",
+          expected_expanded=textwrap.dedent("""\
+              FlattenedIndexKey(
+                key=3,
+              )"""),
+          expected_roundtrip_collapsed="jax.tree_util.FlattenedIndexKey(key=3)",
+      ),
+      dict(
           testcase_name="pytorch_module",
           target_builder=fixture_lib.SomePyTorchModule.build,
           expected_collapsed=(

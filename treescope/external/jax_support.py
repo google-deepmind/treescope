@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import functools
 import typing
-from typing import Mapping
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 from treescope import canonical_aliases
@@ -300,39 +300,63 @@ def faster_array_repr(array: jax.Array) -> str:
   return f"{prefix}{datastring}, {dtype_str}"
 
 
-def render_shape_dtype_struct(
-    node: jax.ShapeDtypeStruct,
-    path: str | None,
-    subtree_renderer: renderers.TreescopeSubtreeRenderer,
-) -> (
-    rendering_parts.RenderableTreePart
-    | rendering_parts.RenderableAndLineAnnotations
-    | type(NotImplemented)
-):
-  """Renders jax.ShapeDtypeStruct."""
-  assert jax is not None, "JAX is not available."
-  if type(node) is not jax.ShapeDtypeStruct:  # pylint: disable=unidiomatic-typecheck
-    return NotImplemented
-  attributes = {
-      "shape": node.shape,
-      "dtype": node.dtype,
-  }
-  if node.sharding is not None:
-    attributes["sharding"] = node.sharding
+def make_checked_dataclasslike_renderer(
+    cls: type[Any],
+    fields: Sequence[str],
+    fields_with_none_default: Sequence[str] = (),
+) -> renderers.TreescopeNodeHandler:
+  """Builds a roundtrippable renderer for a dataclass-like class.
 
-  # Make sure we can correctly round-trip it. We check because ShapeDtypeStruct
-  # occasionally adds new attributes for new JAX features.
-  rebuilt = jax.ShapeDtypeStruct(**attributes)
-  if rebuilt != node:
-    return NotImplemented
-  else:
-    return repr_lib.render_object_constructor(
-        object_type=jax.ShapeDtypeStruct,
-        attributes=attributes,
-        path=path,
-        subtree_renderer=subtree_renderer,
-        roundtrippable=True,
-    )
+  This function can be used to safely render classes that behave like Python
+  dataclasses (i.e. they can be roundtripped by calling the constructor with
+  attributes as keyword arguments). It is robust to potential new attributes
+  being added by checking that it is possible to rebuild the instance correctly.
+  This can be ued to render JAX builtin classes.
+
+  Args:
+    cls: The class to render.
+    fields: A sequence of attribute names to render as keyword args.
+    fields_with_none_default: A sequence of attribute names to render as keyword
+      args only if they exist and their value is not None.
+
+  Returns:
+    A node handler for nodes of this type, which returns a simple rendering
+    whenever the object is correctly described by these attributes.
+  """
+
+  def render_it(
+      node: Any,
+      path: str | None,
+      subtree_renderer: renderers.TreescopeSubtreeRenderer,
+  ) -> (
+      rendering_parts.RenderableTreePart
+      | rendering_parts.RenderableAndLineAnnotations
+      | type(NotImplemented)
+  ):
+    if type(node) is not cls:  # pylint: disable=unidiomatic-typecheck
+      return NotImplemented
+    try:
+      attributes = {k: getattr(node, k) for k in fields}
+    except AttributeError:
+      return NotImplemented
+    for k in fields_with_none_default:
+      if hasattr(node, k) and getattr(node, k) is not None:
+        attributes[k] = getattr(node, k)
+
+    # Make sure we can correctly round-trip it.
+    rebuilt = cls(**attributes)
+    if rebuilt != node:
+      return NotImplemented
+    else:
+      return repr_lib.render_object_constructor(
+          object_type=cls,
+          attributes=attributes,
+          path=path,
+          subtree_renderer=subtree_renderer,
+          roundtrippable=True,
+      )
+
+  return render_it
 
 
 def render_precision(
@@ -621,7 +645,31 @@ def set_up_treescope():
         "Cannot set up JAX support in treescope: JAX cannot be imported."
     )
   type_registries.TREESCOPE_HANDLER_REGISTRY[jax.ShapeDtypeStruct] = (
-      render_shape_dtype_struct
+      make_checked_dataclasslike_renderer(
+          jax.ShapeDtypeStruct,
+          fields=("shape", "dtype"),
+          fields_with_none_default=("sharding",),
+      )
+  )
+  type_registries.TREESCOPE_HANDLER_REGISTRY[jax.tree_util.SequenceKey] = (
+      make_checked_dataclasslike_renderer(
+          jax.tree_util.SequenceKey, fields=("idx",)
+      )
+  )
+  type_registries.TREESCOPE_HANDLER_REGISTRY[jax.tree_util.DictKey] = (
+      make_checked_dataclasslike_renderer(
+          jax.tree_util.DictKey, fields=("key",)
+      )
+  )
+  type_registries.TREESCOPE_HANDLER_REGISTRY[jax.tree_util.GetAttrKey] = (
+      make_checked_dataclasslike_renderer(
+          jax.tree_util.GetAttrKey, fields=("name",)
+      )
+  )
+  type_registries.TREESCOPE_HANDLER_REGISTRY[
+      jax.tree_util.FlattenedIndexKey
+  ] = make_checked_dataclasslike_renderer(
+      jax.tree_util.FlattenedIndexKey, fields=("key",)
   )
   type_registries.TREESCOPE_HANDLER_REGISTRY[jax.lax.Precision] = (
       render_precision
@@ -646,4 +694,16 @@ def set_up_treescope():
   ]:
     canonical_aliases.populate_from_public_api(
         jax_api_module, canonical_aliases.prefix_filter("jax")
+    )
+
+  for key_cls_name in [
+      "SequenceKey",
+      "DictKey",
+      "GetAttrKey",
+      "FlattenedIndexKey",
+  ]:
+    canonical_aliases.add_alias(
+        getattr(jax.tree_util, key_cls_name),
+        canonical_aliases.ModuleAttributePath("jax.tree_util", (key_cls_name,)),
+        on_conflict="ignore",
     )
