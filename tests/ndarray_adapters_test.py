@@ -14,6 +14,10 @@
 
 """Tests for NDArray adapters and array visualization."""
 
+from logging import warn, warning
+import re
+import warnings
+
 from absl.testing import absltest
 from absl.testing import parameterized
 import jax.numpy as jnp
@@ -146,16 +150,26 @@ class NdarrayAdaptersTest(parameterized.TestCase):
 
   def test_pytorch_named_axes_info(self):
     data = np.arange(19 * 23).reshape((19, 23))
-    array = torch.tensor(data).rename("foo", None)
-    adapter = type_registries.lookup_ndarray_adapter(array)
-    self.assertIsNotNone(adapter)
-    self.assertEqual(
-        adapter.get_axis_info_for_array_data(array),
-        (
-            ndarray_adapters.NamedPositionalAxisInfo(0, "foo", 19),
-            ndarray_adapters.PositionalAxisInfo(1, 23),
-        ),
-    )
+    with warnings.catch_warnings():
+      warnings.filterwarnings(
+          "ignore",
+          category=UserWarning,
+          module="torch",
+          message=re.escape(
+              "Named tensors and all their associated APIs are an experimental"
+              " feature and subject to change."
+          ),
+      )
+      array = torch.tensor(data).rename("foo", None)
+      adapter = type_registries.lookup_ndarray_adapter(array)
+      self.assertIsNotNone(adapter)
+      self.assertEqual(
+          adapter.get_axis_info_for_array_data(array),
+          (
+              ndarray_adapters.NamedPositionalAxisInfo(0, "foo", 19),
+              ndarray_adapters.PositionalAxisInfo(1, 23),
+          ),
+      )
 
   @parameterized.product(
       array_type=["numpy", "jax", "torch"],

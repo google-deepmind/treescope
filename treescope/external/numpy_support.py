@@ -15,7 +15,9 @@
 """Lazy setup logic for adding Numpy support to treescope."""
 from __future__ import annotations
 
+import re
 from typing import Any
+import warnings
 
 import numpy as np
 from treescope import canonical_aliases
@@ -309,6 +311,18 @@ def set_up_treescope():
   type_registries.TREESCOPE_HANDLER_REGISTRY[np.ndarray] = render_ndarrays
   type_registries.TREESCOPE_HANDLER_REGISTRY[np.dtype] = render_dtype_instances
 
-  canonical_aliases.populate_from_public_api(
-      np, canonical_aliases.prefix_filter("numpy", excludes=("numpy.core",))
-  )
+  with warnings.catch_warnings():
+    # This warning is triggered by walking the numpy API, but we are not
+    # actually accessing anything under numpy.core while building aliases, so it
+    # is safe to ignore temporarily.
+    warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        module="treescope.canonical_aliases",
+        message=re.escape(
+            "numpy.core is deprecated and has been renamed to numpy._core."
+        ),
+    )
+    canonical_aliases.populate_from_public_api(
+        np, canonical_aliases.prefix_filter("numpy", excludes=("numpy.core",))
+    )
