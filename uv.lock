@@ -1962,7 +1962,7 @@ wheels = [
 
 [[package]]
 name = "penzai"
-version = "0.2.2"
+version = "0.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "absl-py" },
@@ -1972,9 +1972,9 @@ dependencies = [
     { name = "treescope" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/07/61/48ce2a1d8a16a4b778837981bed648cb9ea4aefb7b91bc6490b405a17b87/penzai-0.2.2.tar.gz", hash = "sha256:f08b1c7151ea07dfe80b99abc5c749942fb0da112ed2ba82d5588ec255f8e8be", size = 36596103 }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/4b/3cdbb6b95c152c33040e61703ff70bdf989f1942034c24a9db4f90574a90/penzai-0.2.4.tar.gz", hash = "sha256:790462f7b363bdcbb2fe2c6e0e8e4215208afd4d75be2c065bcbb4f3645dc058", size = 912213 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/11/89/c96aa7941afceddef928e0b3ffe99c2eb25b0012b164dc5234fc049dd3aa/penzai-0.2.2-py3-none-any.whl", hash = "sha256:387caf4a0af4067658528ae931648421b8fe2d62d0b32eb0c9254b2d95771e7e", size = 314479 },
+    { url = "https://files.pythonhosted.org/packages/d9/96/f2f695a4b4659d9540c25c08a61d1f9accc7938c94b7deaf79bba9efeb92/penzai-0.2.4-py3-none-any.whl", hash = "sha256:107b03be3e959bb1aeb0357cd1a7f30aab8264ef64b931157f2873118acdc85a", size = 317839 },
 ]
 
 [[package]]
@@ -3097,7 +3097,7 @@ requires-dist = [
     { name = "palettable", marker = "extra == 'docs'", specifier = "==3.3.3" },
     { name = "palettable", marker = "extra == 'notebook'" },
     { name = "pandas", marker = "extra == 'docs'", specifier = "==2.2.2" },
-    { name = "penzai", marker = "extra == 'docs'", specifier = "~=0.2.0" },
+    { name = "penzai", marker = "extra == 'docs'", specifier = "~=0.2.4" },
     { name = "plotly", marker = "extra == 'docs'", specifier = "==5.22.0" },
     { name = "pyink", marker = "extra == 'dev'", specifier = ">=24.3.0" },
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=2.6.0" },
