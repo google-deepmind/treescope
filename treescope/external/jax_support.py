@@ -426,13 +426,19 @@ def _summarize_array_data_unconditionally(array: jax.Array) -> list[str]:
     is_floating = _is_subdtype(array.dtype, jnp.floating)
     is_integer = _is_subdtype(array.dtype, jnp.integer)
     is_bool = _is_subdtype(array.dtype, jnp.bool_)
+    if not (is_floating or is_integer or is_bool):
+      # Non-numeric non-bool data type (perhaps JAX PRNG key dtype). Can't
+      # summarize values.
+      return []
+
     if array.size < SUMMARIZE_USING_NUMPY_THRESHOLD:
-      compute_summary = functools.partial(_compute_summary, xnp=np)
+      stat = _compute_summary(array, is_floating, is_integer, is_bool, xnp=np)
     else:
       compute_summary = jax.jit(_compute_summary, static_argnums=(1, 2, 3))
-    stat = compute_summary(array, is_floating, is_integer, is_bool)
-    # Get values in parallel.
-    stat = jax.device_get(stat)
+      stat = compute_summary(array, is_floating, is_integer, is_bool)
+      # Get values in parallel.
+      stat = jax.device_get(stat)
+
     # pylint: disable=inconsistent-quotes
     if is_floating and stat["any_finite"]:
       output_parts.append(f" ≈{stat['mean']:.2} ±{stat['std']:.2}")
