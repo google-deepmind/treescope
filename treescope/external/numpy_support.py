@@ -132,11 +132,19 @@ class NumpyArrayAdapter(ndarray_adapters.NDArrayAdapter[np.ndarray]):
     )
     return array_dest, mask_dest
 
-  def get_array_summary(self, array: np.ndarray, fast: bool) -> str:
-    output_parts = ["np.ndarray "]
+  def get_array_summary(
+      self, array: np.ndarray, fast: bool
+  ) -> rendering_parts.RenderableTreePart:
+    main_parts = [
+        rendering_parts.abbreviatable(
+            rendering_parts.text("np.ndarray "),
+            rendering_parts.text("np "),
+        )
+    ]
+    main_parts.append(dtype_util.get_dtype_name(array.dtype))
+    main_parts.append(repr(array.shape))
 
-    output_parts.append(dtype_util.get_dtype_name(array.dtype))
-    output_parts.append(repr(array.shape))
+    summary_parts = []
 
     if array.size > 0 and array.size < 100_000 and not fast:
       is_floating = dtype_util.is_floating_dtype(array.dtype)
@@ -153,46 +161,52 @@ class NumpyArrayAdapter(ndarray_adapters.NDArrayAdapter[np.ndarray]):
         std = np.nanstd(inf_to_nan)
 
         if any_finite:
-          output_parts.append(f" ≈{float(mean):.2} ±{float(std):.2}")
-          output_parts.append(
+          summary_parts.append(f" ≈{float(mean):.2} ±{float(std):.2}")
+          summary_parts.append(
               f" [≥{float(np.nanmin(array)):.2}, ≤{float(np.nanmax(array)):.2}]"
           )
 
       if is_integer:
-        output_parts.append(f" [≥{np.min(array):_d}, ≤{np.max(array):_d}]")
+        summary_parts.append(f" [≥{np.min(array):_d}, ≤{np.max(array):_d}]")
 
       if is_floating or is_integer:
         ct_zero = np.count_nonzero(array == 0)
         if ct_zero:
-          output_parts.append(f" zero:{ct_zero:_d}")
+          summary_parts.append(f" zero:{ct_zero:_d}")
 
         ct_nonzero = np.count_nonzero(array)
         if ct_nonzero:
-          output_parts.append(f" nonzero:{ct_nonzero:_d}")
+          summary_parts.append(f" nonzero:{ct_nonzero:_d}")
 
       if is_floating:
         ct_nan = np.count_nonzero(np.isnan(array))
         if ct_nan:
-          output_parts.append(f" nan:{ct_nan:_d}")
+          summary_parts.append(f" nan:{ct_nan:_d}")
 
         ct_inf = np.count_nonzero(np.isposinf(array))
         if ct_inf:
-          output_parts.append(f" inf:{ct_inf:_d}")
+          summary_parts.append(f" inf:{ct_inf:_d}")
 
         ct_neginf = np.count_nonzero(np.isneginf(array))
         if ct_neginf:
-          output_parts.append(f" -inf:{ct_neginf:_d}")
+          summary_parts.append(f" -inf:{ct_neginf:_d}")
 
       if is_bool:
         ct_true = np.count_nonzero(array)
         if ct_true:
-          output_parts.append(f" true:{ct_true:_d}")
+          summary_parts.append(f" true:{ct_true:_d}")
 
         ct_false = np.count_nonzero(np.logical_not(array))
         if ct_false:
-          output_parts.append(f" false:{ct_false:_d}")
+          summary_parts.append(f" false:{ct_false:_d}")
 
-    return "".join(output_parts)
+    return rendering_parts.siblings(
+        *main_parts,
+        rendering_parts.abbreviatable(
+            rendering_parts.siblings(*summary_parts),
+            rendering_parts.empty_part(),
+        ),
+    )
 
   def get_numpy_dtype(self, array: np.ndarray) -> np.dtype:
     return array.dtype
@@ -214,7 +228,7 @@ def render_ndarrays(
 
   def _placeholder() -> rendering_parts.RenderableTreePart:
     return rendering_parts.deferred_placeholder_style(
-        rendering_parts.text(adapter.get_array_summary(node, fast=True))
+        adapter.get_array_summary(node, fast=True)
     )
 
   def _thunk(placeholder_expand_state: rendering_parts.ExpandState | None):

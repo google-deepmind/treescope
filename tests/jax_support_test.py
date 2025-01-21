@@ -17,6 +17,7 @@ from absl.testing import parameterized
 from jax import numpy as jnp
 import jax
 import treescope.external.jax_support
+from . import helpers
 
 
 class JaxSupportTest(parameterized.TestCase):
@@ -36,7 +37,7 @@ class JaxSupportTest(parameterized.TestCase):
     summarized = treescope.external.jax_support.summarize_array_data(keys)
     self.assertEqual(summarized, "")
 
-    full_summary = (
+    full_summary = helpers.ensure_text(
         treescope.external.jax_support.JAXArrayAdapter().get_array_summary(
             keys, fast=False
         )

@@ -67,6 +67,11 @@ from treescope._internal.parts.custom_dataclass_util import (
 from treescope._internal.parts.embedded_iframe import (
     embedded_iframe,
 )
+from treescope._internal.parts.foldable_impl import (
+    abbreviatable,
+    abbreviation_level,
+    abbreviatable_with_annotations,
+)
 from treescope._internal.parts.part_interface import (
     RenderableTreePart,
     RenderableAndLineAnnotations,
@@ -77,6 +82,9 @@ from treescope._internal.parts.part_interface import (
 
 
 __all__ = [
+    "abbreviatable",
+    "abbreviation_level",
+    "abbreviatable_with_annotations",
     "build_full_line_with_annotations",
     "empty_part",
     "floating_annotation_with_separate_focus",
