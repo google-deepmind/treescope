@@ -299,6 +299,8 @@ def _render_to_html_as_root_streaming(
       background-color: white;
       color: black;
       width: fit-content;
+      min-width: 100%;
+      box-sizing: border-box;
       padding-left: 2ch;
       line-height: 1.5;
       contain: content;
