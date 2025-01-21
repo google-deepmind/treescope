@@ -259,6 +259,7 @@ def render_dictionary_wrapper(
       suffix=closing_suffix,
       path=path,
       background_color=color,
+      child_type_single_and_plural=("item", "items"),
   )
 
 

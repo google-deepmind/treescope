@@ -69,10 +69,14 @@ class HtmlContextForSetup:
       this as a prefix in the CSS selector.
     roundtrip_selector: A CSS selector that will match an ancestor of this node
       whenever rendering in roundtrip mode.
+    abbreviate_selector: A CSS selector that will match an ancestor of this
+      node whenever we are requesting that abbreviation should be applied to
+      this node (or its children).
   """
 
   collapsed_selector: str
   roundtrip_selector: str
+  abbreviate_selector: str
 
 
 ################################################################################

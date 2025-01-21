@@ -37,6 +37,7 @@ from treescope import lowering
 from treescope import rendering_parts
 from treescope.external import jax_support
 from tests.fixtures import treescope_examples_fixture as fixture_lib
+from . import helpers
 
 
 @dataclasses.dataclass
@@ -708,7 +709,9 @@ class TreescopeRendererTest(parameterized.TestCase):
     def go(s):
       nonlocal renderer, x
       adapter = jax_support.JAXArrayAdapter()
-      self.assertNotEmpty(adapter.get_array_summary(x, False))
+      self.assertNotEmpty(
+          helpers.ensure_text(adapter.get_array_summary(x, False))
+      )
       return jax.numpy.sum(s)
 
     go(jnp.arange(3))

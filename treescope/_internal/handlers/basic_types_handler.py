@@ -27,7 +27,9 @@ from treescope import renderers
 from treescope import rendering_parts
 from treescope._internal import html_escaping
 from treescope._internal.parts import basic_parts
+from treescope._internal.parts import common_styles
 from treescope._internal.parts import part_interface
+from treescope._internal.parts import foldable_impl
 
 CSSStyleRule = part_interface.CSSStyleRule
 HtmlContextForSetup = part_interface.HtmlContextForSetup
@@ -100,7 +102,7 @@ def render_string_or_bytes(
     # much manipulation of the strings themselves. This means that the safest
     # thing to do is to just embed two copies of the string into the IR,
     # one for the full string and the other for each line.
-    return rendering_parts.build_custom_foldable_tree_node(
+    result = rendering_parts.build_custom_foldable_tree_node(
         contents=StringLiteralColor(
             rendering_parts.fold_condition(
                 collapsed=rendering_parts.text(repr(node)),
@@ -116,9 +118,23 @@ def render_string_or_bytes(
     )
   else:
     # No newlines, so render it on a single line.
-    return rendering_parts.build_one_line_tree_node(
+    result = rendering_parts.build_one_line_tree_node(
         StringLiteralColor(rendering_parts.text(repr(node))), path
     )
+  # Abbreviate long strings.
+  if len(node) > 20:
+    remaining = len(node) - 10
+    result = foldable_impl.abbreviatable_with_annotations(
+        result,
+        abbreviation=basic_parts.siblings(
+            StringLiteralColor(rendering_parts.text(repr(node[:5]))),
+            common_styles.abbreviation_color(
+                rendering_parts.text(f"<{remaining} chars...>")
+            ),
+            StringLiteralColor(rendering_parts.text(repr(node[-5:]))),
+        ),
+    )
+  return result
 
 
 def render_numeric_literal(
@@ -262,6 +278,7 @@ def render_dict(
         children=children,
         suffix=end,
         path=path,
+        child_type_single_and_plural=("item", "items"),
     )
 
 
@@ -347,6 +364,7 @@ def render_sequence_or_set(
         path=path,
         comma_separated=True,
         force_trailing_comma=force_trailing_comma,
+        child_type_single_and_plural=("element", "elements"),
     )
 
 
@@ -368,6 +386,7 @@ def render_simplenamespace(
       ),
       suffix=")",
       path=path,
+      child_type_single_and_plural=("attribute", "attributes"),
   )
 
 
@@ -388,6 +407,7 @@ def render_namedtuple_or_ast(
       ),
       suffix=")",
       path=path,
+      child_type_single_and_plural=("attribute", "attributes"),
   )
 
 
@@ -455,6 +475,7 @@ def handle_basic_types(
         path=path,
         background_color=background_color,
         background_pattern=background_pattern,
+        child_type_single_and_plural=("field", "fields"),
     )
 
   return NotImplemented
