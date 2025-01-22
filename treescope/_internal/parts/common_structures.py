@@ -146,6 +146,8 @@ def build_foldable_tree_node_from_children(
     expand_state: part_interface.ExpandState = (
         part_interface.ExpandState.WEAKLY_COLLAPSED
     ),
+    *,
+    child_type_single_and_plural: tuple[str, str] | None = None,
 ) -> RenderableAndLineAnnotations:
   """Builds a foldable tree node with path buttons.
 
@@ -169,6 +171,8 @@ def build_foldable_tree_node_from_children(
     first_line_annotation: An annotation for the first line of the node when it
       is expanded.
     expand_state: Initial expand state for the foldable.
+    child_type_single_and_plural: If provided, this will be used as the
+      single and plural forms of the child type in the abbreviation.
 
   Returns:
     A new renderable part, possibly with a copy button annotation, for use
@@ -226,6 +230,20 @@ def build_foldable_tree_node_from_children(
   else:
     maybe_first_line_annotation = basic_parts.EmptyPart()
 
+  if child_type_single_and_plural:
+    single, plural = child_type_single_and_plural
+    if len(children) == 1:
+      middle = f"1 {single}..."
+    else:
+      middle = f"{len(children)} {plural}..."
+    abbreviation = basic_parts.siblings(
+        common_styles.comment_color(basic_parts.text("<")),
+        common_styles.abbreviation_color(basic_parts.text(middle)),
+        common_styles.comment_color(basic_parts.text(">")),
+    )
+  else:
+    abbreviation = None
+
   return RenderableAndLineAnnotations(
       renderable=wrap_block(
           foldable_impl.FoldableTreeNodeImpl(
@@ -233,10 +251,15 @@ def build_foldable_tree_node_from_children(
               contents=basic_parts.siblings(
                   maybe_copy_button,
                   maybe_first_line_annotation,
-                  indented_child_class.build(
-                      children,
-                      comma_separated=comma_separated,
-                      force_trailing_comma=force_trailing_comma,
+                  foldable_impl.abbreviatable(
+                      foldable_impl.abbreviation_level(
+                          indented_child_class.build(
+                              children,
+                              comma_separated=comma_separated,
+                              force_trailing_comma=force_trailing_comma,
+                          )
+                      ),
+                      abbreviation=abbreviation,
                   ),
                   wrap_bottomline(suffix),
               ),
