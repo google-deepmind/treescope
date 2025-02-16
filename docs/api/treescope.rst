@@ -108,6 +108,8 @@ configured globally using `context.ContextualValue.set_globally`.
   active_renderer
   default_magic_autovisualizer
   active_expansion_strategy
+  abbreviation_threshold
+  roundtrip_abbreviation_threshold
 
 
 Rendering to strings
@@ -134,4 +136,3 @@ Other utilities
   integer_digitbox
   render_array_sharding
   using_expansion_strategy
-
