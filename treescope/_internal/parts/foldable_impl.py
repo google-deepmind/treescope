@@ -501,6 +501,12 @@ class HasAbbreviation(basic_parts.DeferringToChild):
         | self.abbreviation.html_setup_parts(setup_context)
     )
 
+  def _compute_layout_marks_in_this_part(self) -> frozenset[Any]:
+    return (
+        self.child.layout_marks_in_this_part
+        | self.abbreviation.layout_marks_in_this_part
+    )
+
   def render_to_html(
       self,
       stream: io.TextIOBase,
