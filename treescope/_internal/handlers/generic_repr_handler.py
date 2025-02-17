@@ -55,7 +55,7 @@ def handle_anything_with_repr(
           for line in lines[:-1]
       ]
       lines_with_markers.append(rendering_parts.text(lines[-1]))
-      return rendering_parts.siblings_with_annotations(
+      result = rendering_parts.siblings_with_annotations(
           rendering_parts.build_custom_foldable_tree_node(
               contents=rendering_parts.abbreviation_color(
                   rendering_parts.siblings(*lines_with_markers)
@@ -70,7 +70,7 @@ def handle_anything_with_repr(
       )
     else:
       # Use basic repr as the summary.
-      return rendering_parts.build_custom_foldable_tree_node(
+      result = rendering_parts.build_custom_foldable_tree_node(
           label=rendering_parts.abbreviation_color(
               rendering_parts.comment_color_when_expanded(
                   rendering_parts.siblings(
@@ -92,7 +92,7 @@ def handle_anything_with_repr(
       )
   elif node_repr == basic_repr:
     # Just use the basic repr as the summary, since we don't have anything else.
-    return rendering_parts.build_one_line_tree_node(
+    result = rendering_parts.build_one_line_tree_node(
         line=rendering_parts.abbreviation_color(
             rendering_parts.text(node_repr)
         ),
@@ -102,7 +102,7 @@ def handle_anything_with_repr(
     # Use the custom repr as a one-line summary, but float the basic repr to
     # the right to tell the user what the type is in case the custom repr
     # doesn't include that info.
-    return rendering_parts.siblings_with_annotations(
+    result = rendering_parts.siblings_with_annotations(
         rendering_parts.build_one_line_tree_node(
             line=rendering_parts.abbreviation_color(
                 rendering_parts.text(node_repr)
@@ -115,3 +115,14 @@ def handle_anything_with_repr(
             )
         ],
     )
+
+  # Possibly apply abbreviation.
+  if len(node_repr) > 20:
+    result = rendering_parts.abbreviatable_with_annotations(
+        result,
+        rendering_parts.abbreviation_color(
+            rendering_parts.text(f"<{type(node).__name__}...>")
+        ),
+    )
+
+  return result

@@ -22,6 +22,7 @@ from treescope import figures
 from treescope import lowering
 from treescope import rendering_parts
 from treescope._internal import object_inspection
+from treescope._internal.api import abbreviation as abbreviation_lib
 from treescope._internal.api import array_autovisualizer
 from treescope._internal.api import autovisualize as autovisualize_lib
 from treescope._internal.api import default_renderer
@@ -510,7 +511,10 @@ def register_context_manager_magic():
   IPython.get_ipython().register_magics(ContextManagerMagic)
 
 
-def basic_interactive_setup(autovisualize_arrays: bool = True):
+def basic_interactive_setup(
+    autovisualize_arrays: bool = True,
+    abbreviation_threshold: int | None = None,
+):
   """Sets up IPython for interactive use with Treescope.
 
   This is a helper function that runs various setup steps:
@@ -521,9 +525,13 @@ def basic_interactive_setup(autovisualize_arrays: bool = True):
     * Registers the `%%with` magic.
     * If `autovisualize_arrays` is True, configures Treescope to automatically
       visualize arrays.
+    * If `abbreviation_threshold` is not None, configures Treescope to
+      abbreviate collapsed objects at the given depth.
 
   Args:
     autovisualize_arrays: Whether to automatically visualize arrays.
+    abbreviation_threshold: If not None, configures Treescope to abbreviate
+      collapsed objects at the given depth (recommended to set to 1 or 2).
   """
   register_as_default()
   register_autovisualize_magic()
@@ -533,3 +541,6 @@ def basic_interactive_setup(autovisualize_arrays: bool = True):
     autovisualize_lib.active_autovisualizer.set_globally(
         array_autovisualizer.ArrayAutovisualizer()
     )
+
+  if abbreviation_threshold is not None:
+    abbreviation_lib.abbreviation_threshold.set_globally(abbreviation_threshold)

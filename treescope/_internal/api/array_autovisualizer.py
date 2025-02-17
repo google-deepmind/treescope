@@ -93,7 +93,7 @@ class ArrayAutovisualizer:
       array: ArrayInRegistry,
       adapter: ndarray_adapters.NDArrayAdapter,
       path: str | None,
-      label: str,
+      label: rendering_parts.RenderableTreePart,
       expand_state: rendering_parts.ExpandState,
   ) -> rendering_parts.RenderableTreePart:
     """Helper to visualize an array."""
@@ -231,7 +231,7 @@ class ArrayAutovisualizer:
     else:
       last_line = rendering_parts.text(">")
     custom_rendering = rendering_parts.build_custom_foldable_tree_node(
-        label=rendering_parts.abbreviation_color(rendering_parts.text(label)),
+        label=rendering_parts.abbreviation_color(label),
         contents=rendering_parts.siblings(
             rendering_parts.fold_condition(
                 expanded=rendering_parts.indented_children(outputs)
@@ -269,7 +269,9 @@ class ArrayAutovisualizer:
       def _placeholder() -> rendering_parts.RenderableTreePart:
         summary = adapter.get_array_summary(value, fast=True)
         return rendering_parts.deferred_placeholder_style(
-            rendering_parts.text(f"<{summary}>")
+            rendering_parts.siblings(
+                rendering_parts.text("<"), summary, rendering_parts.text(">")
+            )
         )
 
       def _thunk(
@@ -279,7 +281,8 @@ class ArrayAutovisualizer:
         if expand_state is None:
           expand_state = rendering_parts.ExpandState.WEAKLY_EXPANDED
         summary = adapter.get_array_summary(value, fast=False)
-        label = f"<{summary}"
+        label = rendering_parts.siblings(rendering_parts.text("<"), summary)
+
         return self._autovisualize_array(
             value, adapter, path, label, expand_state
         )

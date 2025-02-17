@@ -26,6 +26,7 @@ import torch
 import treescope
 from treescope import ndarray_adapters
 from treescope import type_registries
+from . import helpers
 
 
 class NdarrayAdaptersTest(parameterized.TestCase):
@@ -142,8 +143,12 @@ class NdarrayAdaptersTest(parameterized.TestCase):
 
     for fast in (True, False):
       with self.subTest("summary_fast" if fast else "summary_slow"):
-        summary_info_np = np_adapter.get_array_summary(array_np, fast=True)
-        summary_info = cur_adapter.get_array_summary(array, fast=True)
+        summary_info_np = helpers.ensure_text(
+            np_adapter.get_array_summary(array_np, fast=True)
+        )
+        summary_info = helpers.ensure_text(
+            cur_adapter.get_array_summary(array, fast=True)
+        )
         self.assertEqual(
             summary_info_np.split(" ", 1)[1], summary_info.split(" ", 1)[1]
         )

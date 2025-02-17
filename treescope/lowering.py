@@ -33,6 +33,7 @@ from treescope._internal import html_encapsulation
 from treescope._internal import html_escaping
 from treescope._internal.parts import foldable_impl
 from treescope._internal.parts import part_interface
+from treescope._internal.api import abbreviation
 
 _deferrables: context.ContextualValue[
     list[foldable_impl.DeferredWithThunk] | None
@@ -168,13 +169,23 @@ def render_to_text_as_root(
         "strip_trailing_whitespace is False."
     )
 
+  render_context = {}
+  if roundtrip:
+    render_context[foldable_impl.ABBREVIATION_THRESHOLD_KEY] = (
+        abbreviation.roundtrip_abbreviation_threshold.get()
+    )
+  else:
+    render_context[foldable_impl.ABBREVIATION_THRESHOLD_KEY] = (
+        abbreviation.abbreviation_threshold.get()
+    )
+
   stream = io.StringIO()
   root_node.render_to_text(
       stream,
       expanded_parent=True,
       indent=0,
       roundtrip_mode=roundtrip,
-      render_context={},
+      render_context=render_context,
   )
   result = stream.getvalue()
 
@@ -251,7 +262,17 @@ def _render_to_html_as_root_streaming(
       stream: io.StringIO,
   ):
     # Extract setup rules.
-    setup_parts = node.html_setup_parts(foldable_impl.SETUP_CONTEXT)
+    html_context_for_setup = part_interface.HtmlContextForSetup(
+        collapsed_selector=foldable_impl.COLLAPSED_SELECTOR,
+        roundtrip_selector=foldable_impl.ROUNDTRIP_SELECTOR,
+        abbreviate_selector=foldable_impl.make_abbreviate_selector(
+            threshold=abbreviation.abbreviation_threshold.get(),
+            roundtrip_threshold=(
+                abbreviation.roundtrip_abbreviation_threshold.get()
+            ),
+        ),
+    )
+    setup_parts = node.html_setup_parts(html_context_for_setup)
     current_styles = []
     current_js_defns = []
     for part in setup_parts:

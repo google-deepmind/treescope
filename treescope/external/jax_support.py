@@ -520,17 +520,29 @@ class JAXArrayAdapter(ndarray_adapters.NDArrayAdapter[jax.Array]):
     array, mask = truncate_array_and_mask(array, mask, edge_items_per_axis)
     return jax.device_get((array, mask))
 
-  def get_array_summary(self, array: jax.Array, fast: bool) -> str:
-    output_parts = ["jax.Array "]
+  def get_array_summary(
+      self, array: jax.Array, fast: bool
+  ) -> rendering_parts.RenderableTreePart:
+    output_parts = [
+        rendering_parts.abbreviatable(
+            rendering_parts.text("jax.Array "),
+            rendering_parts.text("jax "),
+        )
+    ]
 
     output_parts.append(dtype_util.get_dtype_name(array.dtype))
     output_parts.append(repr(array.shape))
     if array.is_deleted():
       output_parts.append(" - deleted!")
     elif not fast:
-      output_parts.append(summarize_array_data(array))
+      output_parts.append(
+          rendering_parts.abbreviatable(
+              rendering_parts.text(summarize_array_data(array)),
+              rendering_parts.empty_part(),
+          )
+      )
 
-    return "".join(output_parts)
+    return rendering_parts.siblings(*output_parts)
 
   def get_numpy_dtype(self, array: jax.Array) -> np.dtype | None:
     if isinstance(array.dtype, np.dtype):
@@ -581,14 +593,20 @@ def render_jax_arrays(
 
   if node.is_deleted():
     return rendering_parts.error_color(
-        rendering_parts.text(
-            "<" + adapter.get_array_summary(node, fast=True) + ">"
+        rendering_parts.siblings(
+            rendering_parts.text("<"),
+            adapter.get_array_summary(node, fast=True),
+            rendering_parts.text(">"),
         )
     )
 
   def _placeholder() -> rendering_parts.RenderableTreePart:
     return rendering_parts.deferred_placeholder_style(
-        rendering_parts.text(adapter.get_array_summary(node, fast=True))
+        rendering_parts.siblings(
+            rendering_parts.text("<"),
+            adapter.get_array_summary(node, fast=True),
+            rendering_parts.text(">"),
+        )
     )
 
   def _thunk(placeholder_expand_state: rendering_parts.ExpandState | None):

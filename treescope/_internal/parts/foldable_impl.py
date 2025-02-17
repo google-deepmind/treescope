@@ -15,7 +15,7 @@
 """Low-level implementation details of the foldable system.
 
 This module contains low-level wrappers that handle folding and unfolding,
-path copy button rendering, and deferred rendering.
+path copy button rendering, deferred rendering, and abbreviation.
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from typing import Any, Callable, Sequence
 
 from treescope._internal import html_escaping
 from treescope._internal.parts import basic_parts
+from treescope._internal.parts import common_styles
 from treescope._internal.parts import part_interface
 
 
@@ -37,12 +38,16 @@ ExpandState = part_interface.ExpandState
 FoldableTreeNode = part_interface.FoldableTreeNode
 
 
-SETUP_CONTEXT = HtmlContextForSetup(
-    collapsed_selector=(
-        ".foldable_node:has(>label>.foldable_node_toggle:not(:checked))"
-    ),
-    roundtrip_selector=".treescope_root.roundtrip_mode",
+COLLAPSED_SELECTOR = (
+    ".foldable_node:has(>label>.foldable_node_toggle:not(:checked))"
 )
+ROUNDTRIP_SELECTOR = ".treescope_root.roundtrip_mode"
+NOT_ROUNDTRIP_SELECTOR = ".treescope_root:not(.roundtrip_mode)"
+
+ABBREVIATION_LEVEL_KEY = "abbreviation_level"
+ABBREVIATION_THRESHOLD_KEY = "abbreviation_threshold"
+ABBREVIATION_LEVEL_CLASS = "abbr_lvl"
+
 
 ################################################################################
 # Foldable node implementation
@@ -84,10 +89,10 @@ class FoldableTreeNodeImpl(FoldableTreeNode):
   def html_setup_parts(
       self, setup_context: HtmlContextForSetup
   ) -> set[CSSStyleRule | JavaScriptDefn]:
-    if setup_context.collapsed_selector != SETUP_CONTEXT.collapsed_selector:
+    if setup_context.collapsed_selector != COLLAPSED_SELECTOR:
       raise ValueError(
           "FoldableTreeNodeImpl only works properly when the tree is"
-          " configured using SETUP_CONTEXT.collapsed_selector"
+          " configured using foldable_impl.COLLAPSED_SELECTOR"
       )
     # These CSS rules ensure that:
     # - Fold markers appear relative to the "foldable_node" HTML element
@@ -461,3 +466,211 @@ def fake_placeholder_foldable(
       ),
       expand_state=ExpandState.WEAKLY_EXPANDED,
   )
+
+
+################################################################################
+# Abbreviation
+################################################################################
+
+
+@dataclasses.dataclass
+class HasAbbreviation(basic_parts.DeferringToChild):
+  """A part with an abbreviation."""
+
+  child: RenderableTreePart
+  abbreviation: RenderableTreePart
+
+  def html_setup_parts(
+      self, setup_context: HtmlContextForSetup
+  ) -> set[CSSStyleRule | JavaScriptDefn]:
+    # Show or collapse based on the abbreviation selector.
+    rule = html_escaping.without_repeated_whitespace(f"""
+        .when_abbr {{
+            display: none;
+        }}
+        {setup_context.abbreviate_selector} .when_abbr {{
+            display: inline;
+        }}
+        {setup_context.abbreviate_selector} .not_abbr {{
+            display: none;
+        }}
+        """)
+    return (
+        {CSSStyleRule(rule)}
+        | self.child.html_setup_parts(setup_context)
+        | self.abbreviation.html_setup_parts(setup_context)
+    )
+
+  def _compute_layout_marks_in_this_part(self) -> frozenset[Any]:
+    return (
+        self.child.layout_marks_in_this_part
+        | self.abbreviation.layout_marks_in_this_part
+    )
+
+  def render_to_html(
+      self,
+      stream: io.TextIOBase,
+      *,
+      at_beginning_of_line: bool = False,
+      render_context: dict[Any, Any],
+  ):
+    stream.write("<span class='not_abbr'>")
+    self.child.render_to_html(
+        stream,
+        at_beginning_of_line=at_beginning_of_line,
+        render_context=render_context,
+    )
+    stream.write("</span>")
+    stream.write("<span class='when_abbr'>")
+    self.abbreviation.render_to_html(
+        stream,
+        at_beginning_of_line=at_beginning_of_line,
+        render_context=render_context,
+    )
+    stream.write("</span>")
+
+  def render_to_text(
+      self,
+      stream: io.TextIOBase,
+      *,
+      expanded_parent: bool,
+      indent: int,
+      roundtrip_mode: bool,
+      render_context: dict[Any, Any],
+  ):
+    level = render_context.get(ABBREVIATION_LEVEL_KEY, 0)
+    threshold = render_context.get(ABBREVIATION_THRESHOLD_KEY, None)
+    if threshold is not None and level >= threshold:
+      self.abbreviation.render_to_text(
+          stream,
+          expanded_parent=expanded_parent,
+          indent=indent,
+          roundtrip_mode=roundtrip_mode,
+          render_context=render_context,
+      )
+    else:
+      self.child.render_to_text(
+          stream,
+          expanded_parent=expanded_parent,
+          indent=indent,
+          roundtrip_mode=roundtrip_mode,
+          render_context=render_context,
+      )
+
+
+@dataclasses.dataclass
+class AbbreviationLevel(basic_parts.DeferringToChild):
+  """Marks an abbreviation level, indicating that children may be abbreviated.
+
+  Abbreviation levels are only active when their parent is collapsed. Once we
+  pass a collapsed parent and the threshold number of further abbreviation
+  levels, children with abbreviations will be abbreviated.
+  """
+
+  child: RenderableTreePart
+
+  def render_to_html(
+      self,
+      stream: io.TextIOBase,
+      *,
+      at_beginning_of_line: bool = False,
+      render_context: dict[Any, Any],
+  ):
+    stream.write(f"<span class='{ABBREVIATION_LEVEL_CLASS}'>")
+    self.child.render_to_html(
+        stream,
+        at_beginning_of_line=at_beginning_of_line,
+        render_context=render_context,
+    )
+    stream.write("</span>")
+
+  def render_to_text(
+      self,
+      stream: io.TextIOBase,
+      *,
+      expanded_parent: bool,
+      indent: int,
+      roundtrip_mode: bool,
+      render_context: dict[Any, Any],
+  ):
+    if expanded_parent:
+      new_render_context = render_context
+    else:
+      # We need to increment the abbreviation level.
+      old_level = render_context.get(ABBREVIATION_LEVEL_KEY, 0)
+      new_render_context = {
+          **render_context,
+          ABBREVIATION_LEVEL_KEY: old_level + 1,
+      }
+
+    self.child.render_to_text(
+        stream,
+        expanded_parent=expanded_parent,
+        indent=indent,
+        roundtrip_mode=roundtrip_mode,
+        render_context=new_render_context,
+    )
+
+
+def abbreviatable(
+    child: RenderableTreePart, abbreviation: RenderableTreePart | None = None
+) -> RenderableTreePart:
+  """Marks an object as being able to be abbreviated.
+
+  Args:
+    object: The object to mark as abbreviatable. This will be replaced by the
+        fallback if the object is past the current abbreviation depth.
+    abbreviation: The fallback to use if the object is abbreviated.
+  """
+  if abbreviation is None:
+    abbreviation = basic_parts.siblings(
+        common_styles.comment_color(basic_parts.text("<")),
+        common_styles.abbreviation_color(basic_parts.text("...")),
+        common_styles.comment_color(basic_parts.text(">")),
+    )
+  return HasAbbreviation(child, abbreviation)
+
+
+def abbreviatable_with_annotations(
+    child: part_interface.RenderableAndLineAnnotations,
+    abbreviation: RenderableTreePart | None = None,
+) -> part_interface.RenderableAndLineAnnotations:
+  """Marks an object with annotations as being able to be abbreviated.
+
+  Args:
+    object: The object (with annotations) to mark as abbreviatable. This will
+        be replaced by the fallback if the object is past the current
+        abbreviation depth.
+    abbreviation: The fallback to use if the object is abbreviated.
+  """
+  return part_interface.RenderableAndLineAnnotations(
+      HasAbbreviation(child.renderable, abbreviation), child.annotations
+  )
+
+
+def abbreviation_level(child: RenderableTreePart) -> RenderableTreePart:
+  """Marks an abbreviation level, indicating children may be abbreviated."""
+  return AbbreviationLevel(child)
+
+
+def make_abbreviate_selector(
+    threshold: int | None, roundtrip_threshold: int | None
+) -> str:
+  """Builds a CSS selector that matches nodes that should be abbreviated.
+
+  Args:
+    threshold: The threshold for normal mode.
+    roundtrip_threshold: The threshold for roundtrip mode.
+
+  Returns:
+    A CSS selector that matches an ancestor of any node that should be
+    abbreviated.
+  """
+  options = []
+  if threshold is not None:
+    levels = f" .{ABBREVIATION_LEVEL_CLASS}" * threshold
+    options.append(f"{NOT_ROUNDTRIP_SELECTOR} {COLLAPSED_SELECTOR}{levels}")
+  if roundtrip_threshold is not None:
+    levels = f" .{ABBREVIATION_LEVEL_CLASS}" * roundtrip_threshold
+    options.append(f"{ROUNDTRIP_SELECTOR} {COLLAPSED_SELECTOR}{levels}")
+  return ":is(" + ", ".join(options) + ")"
