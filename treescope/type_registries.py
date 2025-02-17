@@ -126,6 +126,14 @@ _LAZY_MODULE_SETUP_FUNCTIONS: dict[str, tuple[str, str]] = {
         "treescope.external.torch_support",
         "set_up_treescope",
     ),
+    "omegaconf": (
+        "treescope.external.omegaconf_support",
+        "set_up_omegaconf",
+    ),
+    "pydantic": (
+        "treescope.external.pydantic_support",
+        "set_up_pydantic",
+    ),
 }
 """Delayed setup functions that run only once a module is imported.
 
