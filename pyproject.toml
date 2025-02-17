@@ -34,6 +34,8 @@ test = [
     "jax>=0.4.23",
     "pytest>=8.2.2",
     "torch>=2.0.0",
+    "pydantic>=2.0.0",
+    "omegaconf>=2.0.0",
 ]
 # Extra dependencies for some notebook demos.
 notebook = [

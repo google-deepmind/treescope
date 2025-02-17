@@ -29,6 +29,8 @@ from absl.testing import parameterized
 import jax
 import jax.numpy as jnp
 import numpy as np
+import omegaconf
+import pydantic
 import torch
 import treescope
 from treescope import handlers
@@ -664,6 +666,68 @@ class TreescopeRendererTest(parameterized.TestCase):
                   (0): LayerNorm(normalized_shape=(10,), eps=1e-05, elementwise_affine=True, training=True, weight=<torch.nn.Parameter float32(10,) ≈1.0 ±0.0 [≥1.0, ≤1.0] nonzero:10>, bias=<torch.nn.Parameter float32(10,) ≈0.0 ±0.0 [≥0.0, ≤0.0] zero:10>, ),
                   (1): SiLU(inplace=False, training=True, ),
                 ),
+              )"""),
+      ),
+      dict(
+          testcase_name="omegaconf_dictconfig",
+          target=omegaconf.DictConfig({"a": 1, "b": 2, "c": 3}),
+          expand_depth=1,
+          expected_collapsed="DictConfig({'a': 1, 'b': 2, 'c': 3})",
+          expected_expanded=textwrap.dedent("""\
+              DictConfig({
+                'a': 1,
+                'b': 2,
+                'c': 3,
+              })"""),
+          expected_roundtrip_collapsed=(
+              "omegaconf.DictConfig({'a': 1, 'b': 2, 'c': 3})"
+          ),
+          expected_roundtrip=textwrap.dedent("""\
+              omegaconf.DictConfig({
+                'a': 1,
+                'b': 2,
+                'c': 3,
+              })"""),
+      ),
+      dict(
+          testcase_name="omegaconf_listconfig",
+          target=omegaconf.ListConfig([1, 2, 3]),
+          expand_depth=1,
+          expected_collapsed="ListConfig([1, 2, 3])",
+          expected_expanded=textwrap.dedent("""\
+              ListConfig([
+                1,
+                2,
+                3,
+              ])"""),
+          expected_roundtrip_collapsed="omegaconf.ListConfig([1, 2, 3])",
+          expected_roundtrip=textwrap.dedent("""\
+              omegaconf.ListConfig([
+                1,
+                2,
+                3,
+              ])"""),
+      ),
+      dict(
+          testcase_name="pydantic_model",
+          target=fixture_lib.SomePydanticModel(a=1, b="abc", c=3.14),
+          expand_depth=1,
+          expected_collapsed="SomePydanticModel(a=1, b='abc', c=3.14)",
+          expected_expanded=textwrap.dedent("""\
+              SomePydanticModel(
+                a=1,
+                b='abc',
+                c=3.14,
+              )"""),
+          expected_roundtrip_collapsed=(
+              "tests.fixtures.treescope_examples_fixture.SomePydanticModel("
+              "a=1, b='abc', c=3.14)"
+          ),
+          expected_roundtrip=textwrap.dedent("""\
+              tests.fixtures.treescope_examples_fixture.SomePydanticModel(
+                a=1,
+                b='abc',
+                c=3.14,
               )"""),
       ),
       # Abbreviated objects.
