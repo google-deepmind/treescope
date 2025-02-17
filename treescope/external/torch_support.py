@@ -179,6 +179,8 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
   ) -> rendering_parts.RenderableTreePart:
     assert torch is not None, "PyTorch is not available."
     ty = type(array)
+    array_grad = array.grad
+    array_requires_grad = array.requires_grad
     array = array.detach()
     typename = f"{ty.__module__}.{ty.__name__}"
     abbrv = f"{ty.__name__}"
@@ -267,6 +269,18 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
         ct_false = torch.count_nonzero(torch.logical_not(array))
         if ct_false:
           summary_parts.append(f" false:{ct_false:_d}")
+
+    if issubclass(ty, torch.nn.Parameter):
+      # Assume parameters require grad by default.
+      if not array_requires_grad:
+        summary_parts.append(" requires_grad=False")
+    else:
+      # Assume non-parameters don't require grad by default.
+      if array_requires_grad:
+        summary_parts.append(" requires_grad=True")
+
+    if array_grad is not None:
+      summary_parts.append(f" grad=<{type(array_grad).__name__}>")
 
     return rendering_parts.siblings(
         *always_show_parts,

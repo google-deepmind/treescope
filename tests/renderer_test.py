@@ -48,6 +48,12 @@ class CustomReprHTMLObject:
     return self.repr_html
 
 
+def _fill_grad_as_ones(tensor: torch.Tensor) -> torch.Tensor:
+  tensor.requires_grad_()
+  tensor.sum().backward()
+  return tensor
+
+
 class TreescopeRendererTest(parameterized.TestCase):
 
   def setUp(self):
@@ -398,6 +404,70 @@ class TreescopeRendererTest(parameterized.TestCase):
                 tensor([[ 0,  1,  2,  3,  4,  5,  6],
                         [ 7,  8,  9, 10, 11, 12, 13],
                         [14, 15, 16, 17, 18, 19, 20]])"""),
+      ),
+      dict(
+          testcase_name="pytorch_tensor_large_requires_grad",
+          target_builder=lambda: torch.tensor(
+              np.arange(3 * 7, dtype=np.float32).reshape((3, 7))
+          ).requires_grad_(),
+          expected_collapsed=(
+              """<torch.Tensor float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True>"""
+          ),
+          expected_expanded=textwrap.dedent(
+              """\
+              # torch.Tensor float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True
+                tensor([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+                        [ 7.,  8.,  9., 10., 11., 12., 13.],
+                        [14., 15., 16., 17., 18., 19., 20.]], requires_grad=True)"""
+          ),
+      ),
+      dict(
+          testcase_name="pytorch_tensor_large_has_grad",
+          target_builder=lambda: _fill_grad_as_ones(
+              torch.tensor(np.arange(3 * 7, dtype=np.float32).reshape((3, 7)))
+          ),
+          expected_collapsed=(
+              """<torch.Tensor float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True grad=<Tensor>>"""
+          ),
+          expected_expanded=textwrap.dedent(
+              """\
+              # torch.Tensor float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True grad=<Tensor>
+                tensor([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+                        [ 7.,  8.,  9., 10., 11., 12., 13.],
+                        [14., 15., 16., 17., 18., 19., 20.]], requires_grad=True)"""
+          ),
+      ),
+      dict(
+          testcase_name="pytorch_parameter",
+          target_builder=lambda: torch.nn.Parameter(
+              torch.tensor(np.arange(3 * 7, dtype=np.float32).reshape((3, 7)))
+          ),
+          expected_collapsed=(
+              """<torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20>"""
+          ),
+          expected_expanded=textwrap.dedent(
+              """\
+              # torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20
+                Parameter containing:
+                tensor([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+                        [ 7.,  8.,  9., 10., 11., 12., 13.],
+                        [14., 15., 16., 17., 18., 19., 20.]], requires_grad=True)"""
+          ),
+      ),
+      dict(
+          testcase_name="pytorch_parameter_frozen",
+          target_builder=lambda: torch.nn.Parameter(
+              torch.tensor(np.arange(3 * 7, dtype=np.float32).reshape((3, 7)))
+          ).requires_grad_(False),
+          expected_collapsed=(
+              """<torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=False>"""
+          ),
+          expected_expanded=textwrap.dedent("""\
+              # torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=False
+                Parameter containing:
+                tensor([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
+                        [ 7.,  8.,  9., 10., 11., 12., 13.],
+                        [14., 15., 16., 17., 18., 19., 20.]])"""),
       ),
       dict(
           testcase_name="well_known_function",
