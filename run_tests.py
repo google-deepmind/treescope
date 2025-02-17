@@ -16,4 +16,4 @@
 import subprocess
 
 if __name__ == "__main__":
-  subprocess.check_call(["python", "-m", "pytest"])
+  subprocess.check_call(["python", "-m", "pytest", "--tb=short"])
