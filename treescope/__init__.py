@@ -184,7 +184,7 @@ fully roundtrippable due to the abbreviated children.
 """
 
 # Package version.
-__version__ = '0.1.8'
+__version__ = '0.1.9'
 
 
 # Set up canonical aliases for the treescope API itself.
