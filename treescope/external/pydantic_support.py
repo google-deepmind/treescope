@@ -24,12 +24,12 @@ from treescope import type_registries
 try:
   import pydantic
 except ImportError:
-  omegaconf = None
+  pydantic = None
 # pylint: enable=import-outside-toplevel
 
 
 def render_pydantic_model(
-    node: pydantic.BaseModel,
+    node: pydantic.BaseModel,  # pytype: disable=attribute-error
     path: str | None,
     subtree_renderer: renderers.TreescopeSubtreeRenderer,
 ) -> rendering_parts.Rendering | type(NotImplemented):
