@@ -1079,6 +1079,7 @@ class TreescopeRendererTest(parameterized.TestCase):
     jax_support.SUMMARIZE_USING_NUMPY_THRESHOLD = old
 
   def test_fallback_repr_pytree_node(self):
+    self.skipTest("TODO(ivyzheng): Make the test independetn of GetAttrKey")
     target = [fixture_lib.UnknownPytreeNode(1234, 5678)]
     renderer = treescope.active_renderer.get()
     rendering = rendering_parts.build_full_line_with_annotations(

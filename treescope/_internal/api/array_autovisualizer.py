@@ -301,22 +301,11 @@ class ArrayAutovisualizer:
     if "jax" in sys.modules:
       import jax  # pylint: disable=import-outside-toplevel
 
-      if isinstance(
-          value,
-          jax.sharding.PositionalSharding
-          | jax.sharding.NamedSharding
-          | jax.sharding.Mesh,
-      ):
+      if isinstance(value, (jax.sharding.NamedSharding, jax.sharding.Mesh)):
         raw_repr = repr(value)
         repr_oneline = " ".join(line.strip() for line in raw_repr.split("\n"))
 
-        if isinstance(value, jax.sharding.PositionalSharding):
-          sharding = value
-          fake_axis_info = [
-              PositionalAxisInfo(i, size)
-              for i, size in enumerate(sharding.shape)
-          ]
-        elif isinstance(value, jax.sharding.NamedSharding):
+        if isinstance(value, jax.sharding.NamedSharding):
           sharding = value
           # Named shardings still act on positional arrays, so show them for
           # the positional shape they require.
