@@ -238,10 +238,9 @@ def truncate_array_and_mask(
     # each sharding in order to figure out what device order it has, and then
     # explicitly request a fully-replicated output that is definitely safe to
     # retrieve.
-    sharding_kwargs["out_shardings"] = (
-        jax.sharding.GSPMDSharding.get_replicated(
-            array.sharding._device_assignment  # pylint: disable=protected-access
-        )
+    sharding_kwargs["out_shardings"] = jax.sharding.NamedSharding(
+        jax.sharding.Mesh(array.sharding._device_assignment, "x"),  # pylint: disable=protected-access
+        jax.sharding.PartitionSpec(),
     )
   if array.size < SUMMARIZE_USING_NUMPY_THRESHOLD and safe_to_summarize(array):
     fn = functools.partial(_truncate_part_with_slices, xnp=np)
