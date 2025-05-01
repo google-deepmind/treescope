@@ -27,6 +27,8 @@ from typing import Any, Generic, TypeVar
 
 import numpy as np
 
+from treescope import rendering_parts
+
 T = TypeVar("T")
 
 
@@ -199,7 +201,9 @@ class NDArrayAdapter(abc.ABC, Generic[T]):
     )
 
   @abc.abstractmethod
-  def get_array_summary(self, array: T, fast: bool) -> str:
+  def get_array_summary(
+      self, array: T, fast: bool
+  ) -> str | rendering_parts.RenderableTreePart:
     """Summarizes the contents of the given array.
 
     The summary returned by this method will be used as a one-line summary of
@@ -219,7 +223,8 @@ class NDArrayAdapter(abc.ABC, Generic[T]):
     Returns:
       A summary of the given array's contents. The summary should be a single
       line of text. It will be wrapped between angle brackets (< and >) when
-      rendered.
+      rendered. It may either be a string or a custom part (useful if the
+      summary should be abbreviated).
     """
     raise NotImplementedError("Subclasses must override `get_array_summary`.")
 

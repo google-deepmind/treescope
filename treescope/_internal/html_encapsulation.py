@@ -127,7 +127,7 @@ CONTAINER_TEMPLATE = """
 })();
 </script>
 <treescope-container class="{__REPLACE_ME_WITH_CONTAINER_ID_CLASS__}"
-></treescope-container>
+style="display:block"></treescope-container>
 <treescope-run-here><script type="application/octet-stream">
 // Find the target container based on its ID class. We use a class instead of
 // an HTML id because it's possible that the notebook display system will
@@ -263,7 +263,20 @@ const root = (
   .filter((elt) => !elt.dataset.stolen)
 )[0];
 root.dataset.stolen = 1;
+// Some notebook environments (in particular, VSCode's embedded notebook)
+// will hide outputs that are empty, but moving elements between different
+// positions can confuse it. To avoid this, we add and remove small amounts of
+// padding to trigger resize detection.
+// 1. Insert temporary element before the stolen element in the old cell.
+const temp = document.createElement("div");
+temp.style = "height: 1px; width: 1px;";
+root.parentNode.insertBefore(temp, root);
+// 2. Move the stolen element into this cell.
 this.parentNode.replaceChild(root, this);
+// 3. Remove the temporary element.
+temp.remove();
+// 4. Add padding to the stolen element, now that it is in this cell.
+root.style.paddingTop = "1px";
 </script></treescope-run-here>
 """
 

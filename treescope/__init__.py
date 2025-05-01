@@ -49,6 +49,10 @@ from . import rendering_parts
 from . import repr_lib
 from . import type_registries
 
+from ._internal.api.abbreviation import (
+    abbreviation_threshold,
+    roundtrip_abbreviation_threshold,
+)
 from ._internal.api.array_autovisualizer import (
     ArrayAutovisualizer,
 )
@@ -152,8 +156,35 @@ This can be overridden interactively to customize the autovisualizer
 used by ``%%autovisualize``.
 """
 
+abbreviation_threshold: context.ContextualValue[int | None] = (
+    abbreviation_threshold
+)
+"""Depth threshold for abbreviating large outputs in normal mode.
+
+This value sets the depth at which values should be abbreviated (replaced by
+... markers) when their parents are collapsed. Threshold 1 means that children
+of a collapsed node should be abbreviated. Threshold 2 means that grandchildren
+of a collapsed node should be abbreviated. Threshold None means that no
+abbreviation should be performed.
+"""
+
+roundtrip_abbreviation_threshold: context.ContextualValue[int | None] = (
+    roundtrip_abbreviation_threshold
+)
+"""Depth threshold for abbreviating large outputs in roundtrip mode.
+
+This value sets the depth at which values should be abbreviated (replaced by
+... markers) when their parents are collapsed. Threshold 1 means that children
+of a collapsed node should be abbreviated. Threshold 2 means that grandchildren
+of a collapsed node should be abbreviated. Threshold None means that no
+abbreviation should be performed.
+
+Note that if abbreviation is enabled in roundtrip mode, outputs may not be
+fully roundtrippable due to the abbreviated children.
+"""
+
 # Package version.
-__version__ = '0.1.6'
+__version__ = '0.1.9'
 
 
 # Set up canonical aliases for the treescope API itself.

@@ -26,6 +26,7 @@ import typing
 from typing import Any
 
 import jax
+import pydantic
 import torch
 import treescope
 
@@ -246,3 +247,9 @@ class SomePyTorchModule(torch.nn.Module):
   def build(cls):
     torch.random.manual_seed(1234)
     return cls()
+
+
+class SomePydanticModel(pydantic.BaseModel):
+  a: int
+  b: str
+  c: float

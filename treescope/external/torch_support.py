@@ -174,16 +174,29 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
     )
     return array_dest, mask_dest
 
-  def get_array_summary(self, array: torch.Tensor, fast: bool) -> str:
+  def get_array_summary(
+      self, array: torch.Tensor, fast: bool
+  ) -> rendering_parts.RenderableTreePart:
     assert torch is not None, "PyTorch is not available."
     ty = type(array)
+    array_grad = array.grad
+    array_requires_grad = array.requires_grad
     array = array.detach()
     typename = f"{ty.__module__}.{ty.__name__}"
-    if typename == "torch.nn.parameter.Parameter":
+    abbrv = f"{ty.__name__}"
+    if typename == "torch.Tensor":
+      abbrv = "torch"
+    elif typename == "torch.nn.parameter.Parameter":
       typename = "torch.nn.Parameter"
-    output_parts = [f"{typename} "]
+      abbrv = "Param"
+    always_show_parts = [
+        rendering_parts.abbreviatable(
+            rendering_parts.text(f"{typename} "),
+            rendering_parts.text(f"{abbrv} "),
+        )
+    ]
 
-    output_parts.append(repr(array.dtype).removeprefix("torch."))
+    always_show_parts.append(repr(array.dtype).removeprefix("torch."))
     name_parts = []
     for size, name in zip(array.shape, array.names):
       if name:
@@ -191,9 +204,11 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
       else:
         name_parts.append(f"{size}")
     if len(name_parts) == 1:
-      output_parts.append("(" + name_parts[0] + ",)")
+      always_show_parts.append("(" + name_parts[0] + ",)")
     else:
-      output_parts.append("(" + ", ".join(name_parts) + ")")
+      always_show_parts.append("(" + ", ".join(name_parts) + ")")
+
+    summary_parts = []
 
     # Drop axis names.
     if any(name is not None for name in array.names):
@@ -214,48 +229,66 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
         std = torch.nanmean(torch.square(inf_to_nan - mean))
 
         if any_finite:
-          output_parts.append(f" ≈{float(mean):.2} ±{float(std):.2}")
+          summary_parts.append(f" ≈{float(mean):.2} ±{float(std):.2}")
           nanmin = torch.amin(torch.where(isfinite, array, torch.inf))
           nanmax = torch.amax(torch.where(isfinite, array, -torch.inf))
-          output_parts.append(f" [≥{float(nanmin):.2}, ≤{float(nanmax):.2}]")
+          summary_parts.append(f" [≥{float(nanmin):.2}, ≤{float(nanmax):.2}]")
 
       if is_integer:
-        output_parts.append(
+        summary_parts.append(
             f" [≥{torch.amin(array):_d}, ≤{torch.amax(array):_d}]"
         )
 
       if is_floating or is_integer:
         ct_zero = torch.count_nonzero(array == 0)
         if ct_zero:
-          output_parts.append(f" zero:{ct_zero:_d}")
+          summary_parts.append(f" zero:{ct_zero:_d}")
 
         ct_nonzero = torch.count_nonzero(array)
         if ct_nonzero:
-          output_parts.append(f" nonzero:{ct_nonzero:_d}")
+          summary_parts.append(f" nonzero:{ct_nonzero:_d}")
 
       if is_floating:
         ct_nan = torch.count_nonzero(torch.isnan(array))
         if ct_nan:
-          output_parts.append(f" nan:{ct_nan:_d}")
+          summary_parts.append(f" nan:{ct_nan:_d}")
 
         ct_inf = torch.count_nonzero(array == torch.inf)
         if ct_inf:
-          output_parts.append(f" inf:{ct_inf:_d}")
+          summary_parts.append(f" inf:{ct_inf:_d}")
 
         ct_neginf = torch.count_nonzero(array == -torch.inf)
         if ct_neginf:
-          output_parts.append(f" -inf:{ct_neginf:_d}")
+          summary_parts.append(f" -inf:{ct_neginf:_d}")
 
       if is_bool:
         ct_true = torch.count_nonzero(array)
         if ct_true:
-          output_parts.append(f" true:{ct_true:_d}")
+          summary_parts.append(f" true:{ct_true:_d}")
 
         ct_false = torch.count_nonzero(torch.logical_not(array))
         if ct_false:
-          output_parts.append(f" false:{ct_false:_d}")
+          summary_parts.append(f" false:{ct_false:_d}")
 
-    return "".join(output_parts)
+    if issubclass(ty, torch.nn.Parameter):
+      # Assume parameters require grad by default.
+      if not array_requires_grad:
+        summary_parts.append(" requires_grad=False")
+    else:
+      # Assume non-parameters don't require grad by default.
+      if array_requires_grad:
+        summary_parts.append(" requires_grad=True")
+
+    if array_grad is not None:
+      summary_parts.append(f" grad=<{type(array_grad).__name__}>")
+
+    return rendering_parts.siblings(
+        *always_show_parts,
+        rendering_parts.abbreviatable(
+            rendering_parts.siblings(*summary_parts),
+            rendering_parts.empty_part(),
+        ),
+    )
 
   def get_sharding_info_for_array_data(
       self, array: torch.Tensor
@@ -300,7 +333,7 @@ def render_torch_tensors(
 
   def _placeholder() -> rendering_parts.RenderableTreePart:
     return rendering_parts.deferred_placeholder_style(
-        rendering_parts.text(adapter.get_array_summary(node, fast=True))
+        adapter.get_array_summary(node, fast=True)
     )
 
   def _thunk(placeholder_expand_state: rendering_parts.ExpandState | None):
@@ -544,6 +577,7 @@ def render_torch_modules(
       background_color=background_color,
       background_pattern=background_pattern,
       expand_state=expand_state,
+      child_type_single_and_plural=("child", "children"),
   )
 
 

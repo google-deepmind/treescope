@@ -15,7 +15,9 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from jax import numpy as jnp
+import jax
 import treescope.external.jax_support
+from . import helpers
 
 
 class JaxSupportTest(parameterized.TestCase):
@@ -29,6 +31,18 @@ class JaxSupportTest(parameterized.TestCase):
     self.assertEqual(
         treescope.external.jax_support.summarize_array_data(inp), expected
     )
+
+  def test_summarize_prng_key(self):
+    keys = jax.random.split(jax.random.key(0, impl="threefry2x32"), 10)
+    summarized = treescope.external.jax_support.summarize_array_data(keys)
+    self.assertEqual(summarized, "")
+
+    full_summary = helpers.ensure_text(
+        treescope.external.jax_support.JAXArrayAdapter().get_array_summary(
+            keys, fast=False
+        )
+    )
+    self.assertEqual(full_summary, "jax.Array key<fry>(10,)")
 
 
 if __name__ == "__main__":

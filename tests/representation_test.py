@@ -26,6 +26,7 @@ from treescope import type_registries
 from treescope._internal.parts import basic_parts
 from treescope._internal.parts import common_structures
 from treescope._internal.parts import part_interface
+from treescope._internal.parts import foldable_impl
 
 CSSStyleRule = part_interface.CSSStyleRule
 
@@ -99,6 +100,7 @@ class MockRenderableTreePart(part_interface.RenderableTreePart):
 mock_context = part_interface.HtmlContextForSetup(
     collapsed_selector='[mock collapsed_selector]',
     roundtrip_selector='[mock roundtrip_selector]',
+    abbreviate_selector='[mock abbreviate selector]',
 )
 
 
@@ -664,101 +666,245 @@ class RepresentationPartsTest(parameterized.TestCase):
               ' b:y]</span>'
           ),
       ),
+      dict(
+          testcase_name='abbreviation_level',
+          part=foldable_impl.AbbreviationLevel(MockRenderableTreePart('A')),
+          expected_width=100,
+          expected_newlines=10,
+          expected_tags=frozenset({'A'}),
+          expected_foldables=(MockFoldableTreeNode(tag='A'),),
+          expected_setup_parts={CSSStyleRule(rule='[mock rule A]'), ...},
+          expected_text_collapsed='[mock A, e:n r:n]',
+          expected_text_expanded='[mock A, e:y r:n]',
+          expected_text_roundtrip_collapsed='[mock A, e:n r:y]',
+          expected_text_roundtrip_expanded='[mock A, e:y r:y]',
+          expected_html=(
+              f"<span class='{foldable_impl.ABBREVIATION_LEVEL_CLASS}'>"
+              '[mock A, b:n]</span>'
+          ),
+          expected_html_at_beginning=(
+              f"<span class='{foldable_impl.ABBREVIATION_LEVEL_CLASS}'>"
+              '[mock A, b:y]</span>'
+          ),
+      ),
+      dict(
+          testcase_name='has_abbreviation',
+          part=foldable_impl.HasAbbreviation(
+              child=MockRenderableTreePart('A'),
+              abbreviation=MockRenderableTreePart('B'),
+          ),
+          expected_width=100,
+          expected_newlines=10,
+          expected_tags=frozenset({'A', 'B'}),
+          expected_foldables=(MockFoldableTreeNode(tag='A'),),
+          expected_setup_parts={
+              CSSStyleRule(rule='[mock rule A]'),
+              CSSStyleRule(rule='[mock rule B]'),
+              ...,
+          },
+          expected_html=(
+              "<span class='not_abbr'>[mock A, b:n]</span>"
+              "<span class='when_abbr'>[mock B, b:n]</span>"
+          ),
+          expected_html_at_beginning=(
+              "<span class='not_abbr'>[mock A, b:y]</span>"
+              "<span class='when_abbr'>[mock B, b:y]</span>"
+          ),
+      ),
+      dict(
+          testcase_name='has_abbreviation_unabbreviated',
+          part=foldable_impl.HasAbbreviation(
+              child=MockRenderableTreePart('A'),
+              abbreviation=MockRenderableTreePart('B'),
+          ),
+          render_context={
+              foldable_impl.ABBREVIATION_LEVEL_KEY: 1,
+              foldable_impl.ABBREVIATION_THRESHOLD_KEY: 2,
+          },
+          expected_text_collapsed='[mock A, e:n r:n]',
+          expected_text_expanded='[mock A, e:y r:n]',
+          expected_text_roundtrip_collapsed='[mock A, e:n r:y]',
+          expected_text_roundtrip_expanded='[mock A, e:y r:y]',
+      ),
+      dict(
+          testcase_name='has_abbreviation_abbreviated',
+          part=foldable_impl.HasAbbreviation(
+              child=MockRenderableTreePart('A'),
+              abbreviation=MockRenderableTreePart('B'),
+          ),
+          render_context={
+              foldable_impl.ABBREVIATION_LEVEL_KEY: 2,
+              foldable_impl.ABBREVIATION_THRESHOLD_KEY: 2,
+          },
+          expected_text_collapsed='[mock B, e:n r:n]',
+          expected_text_expanded='[mock B, e:y r:n]',
+          expected_text_roundtrip_collapsed='[mock B, e:n r:y]',
+          expected_text_roundtrip_expanded='[mock B, e:y r:y]',
+      ),
+      dict(
+          testcase_name='has_abbreviation_under_level',
+          part=foldable_impl.AbbreviationLevel(
+              foldable_impl.HasAbbreviation(
+                  child=MockRenderableTreePart('A'),
+                  abbreviation=MockRenderableTreePart('B'),
+              )
+          ),
+          expected_html=(
+              f"<span class='{foldable_impl.ABBREVIATION_LEVEL_CLASS}'>"
+              "<span class='not_abbr'>[mock A, b:n]</span>"
+              "<span class='when_abbr'>[mock B, b:n]</span>"
+              '</span>'
+          ),
+          expected_html_at_beginning=(
+              f"<span class='{foldable_impl.ABBREVIATION_LEVEL_CLASS}'>"
+              "<span class='not_abbr'>[mock A, b:y]</span>"
+              "<span class='when_abbr'>[mock B, b:y]</span>"
+              '</span>'
+          ),
+          render_context={
+              foldable_impl.ABBREVIATION_LEVEL_KEY: 1,
+              foldable_impl.ABBREVIATION_THRESHOLD_KEY: 2,
+          },
+          # Increments when collapsed.
+          expected_text_collapsed='[mock B, e:n r:n]',
+          # Doesn't increment when expanded.
+          expected_text_expanded='[mock A, e:y r:n]',
+          expected_text_roundtrip_collapsed='[mock B, e:n r:y]',
+          expected_text_roundtrip_expanded='[mock A, e:y r:y]',
+      ),
+      dict(
+          testcase_name='has_abbreviation_under_level_unabbreviated',
+          part=foldable_impl.AbbreviationLevel(
+              foldable_impl.HasAbbreviation(
+                  child=MockRenderableTreePart('A'),
+                  abbreviation=MockRenderableTreePart('B'),
+              )
+          ),
+          render_context={
+              foldable_impl.ABBREVIATION_LEVEL_KEY: 1,
+              foldable_impl.ABBREVIATION_THRESHOLD_KEY: 3,
+          },
+          expected_text_collapsed='[mock A, e:n r:n]',
+          expected_text_expanded='[mock A, e:y r:n]',
+          expected_text_roundtrip_collapsed='[mock A, e:n r:y]',
+          expected_text_roundtrip_expanded='[mock A, e:y r:y]',
+      ),
   )
   def test_parts(
       self,
       *,
       part: basic_parts.RenderableTreePart,
-      expected_width: int | type(NotImplemented),
-      expected_newlines: int,
-      expected_tags: set[Any],
-      expected_foldables: Sequence[basic_parts.FoldableTreeNode],
-      expected_setup_parts: set[Any],
-      expected_text_collapsed: str,
-      expected_text_expanded: str,
-      expected_text_roundtrip_collapsed: str,
-      expected_text_roundtrip_expanded: str,
-      expected_html: str,
-      expected_html_at_beginning: str,
+      expected_width: int | None = None,
+      expected_newlines: int | None = None,
+      expected_tags: set[Any] | None = None,
+      expected_foldables: Sequence[basic_parts.FoldableTreeNode] | None = None,
+      expected_setup_parts: set[Any] | None = None,
+      expected_text_collapsed: str | None = None,
+      expected_text_expanded: str | None = None,
+      expected_text_roundtrip_collapsed: str | None = None,
+      expected_text_roundtrip_expanded: str | None = None,
+      expected_html: str | None = None,
+      expected_html_at_beginning: str | None = None,
       indent: int = 0,
+      render_context: dict[Any, Any] | None = None,
   ):
-    with self.subTest('collapsed_width'):
-      if expected_width is not NotImplemented:
+    if expected_width is not None:
+      with self.subTest('collapsed_width'):
         self.assertEqual(part.collapsed_width, expected_width)
 
-    with self.subTest('newlines_in_expanded_parent'):
-      self.assertEqual(part.newlines_in_expanded_parent, expected_newlines)
+    if expected_newlines is not None:
+      with self.subTest('newlines_in_expanded_parent'):
+        self.assertEqual(part.newlines_in_expanded_parent, expected_newlines)
 
-    with self.subTest('layout_marks_in_this_part'):
-      self.assertEqual(part.layout_marks_in_this_part, expected_tags)
+    if expected_tags is not None:
+      with self.subTest('layout_marks_in_this_part'):
+        self.assertEqual(part.layout_marks_in_this_part, expected_tags)
 
-    with self.subTest('foldables_in_this_part'):
-      self.assertEqual(part.foldables_in_this_part(), expected_foldables)
+    if expected_foldables is not None:
+      with self.subTest('foldables_in_this_part'):
+        self.assertEqual(part.foldables_in_this_part(), expected_foldables)
 
-    with self.subTest('setup_parts'):
-      if isinstance(expected_setup_parts, set) and ... in expected_setup_parts:
-        self.assertContainsSubset(
-            expected_setup_parts - {...}, part.html_setup_parts(mock_context)
-        )
-      else:
-        self.assertEqual(
-            expected_setup_parts, part.html_setup_parts(mock_context)
-        )
+    if expected_setup_parts is not None:
+      with self.subTest('setup_parts'):
+        if (
+            isinstance(expected_setup_parts, set)
+            and ... in expected_setup_parts
+        ):
+          self.assertContainsSubset(
+              expected_setup_parts - {...}, part.html_setup_parts(mock_context)
+          )
+        else:
+          self.assertEqual(
+              expected_setup_parts, part.html_setup_parts(mock_context)
+          )
+
+    if render_context is None:
+      render_context = {}
 
     # Check rendering in text mode.
-    with self.subTest('text_collapsed'):
-      stream = io.StringIO()
-      part.render_to_text(
-          stream,
-          expanded_parent=False,
-          indent=indent,
-          roundtrip_mode=False,
-          render_context={},
-      )
-      self.assertEqual(stream.getvalue(), expected_text_collapsed)
+    if expected_text_collapsed is not None:
+      with self.subTest('text_collapsed'):
+        stream = io.StringIO()
+        part.render_to_text(
+            stream,
+            expanded_parent=False,
+            indent=indent,
+            roundtrip_mode=False,
+            render_context=render_context,
+        )
+        self.assertEqual(stream.getvalue(), expected_text_collapsed)
 
-    with self.subTest('text_expanded'):
-      stream = io.StringIO()
-      part.render_to_text(
-          stream,
-          expanded_parent=True,
-          indent=indent,
-          roundtrip_mode=False,
-          render_context={},
-      )
-      self.assertEqual(stream.getvalue(), expected_text_expanded)
+    if expected_text_expanded is not None:
+      with self.subTest('text_expanded'):
+        stream = io.StringIO()
+        part.render_to_text(
+            stream,
+            expanded_parent=True,
+            indent=indent,
+            roundtrip_mode=False,
+            render_context=render_context,
+        )
+        self.assertEqual(stream.getvalue(), expected_text_expanded)
 
-    with self.subTest('text_roundtrip_collapsed'):
-      stream = io.StringIO()
-      part.render_to_text(
-          stream,
-          expanded_parent=False,
-          indent=indent,
-          roundtrip_mode=True,
-          render_context={},
-      )
-      self.assertEqual(stream.getvalue(), expected_text_roundtrip_collapsed)
+    if expected_text_roundtrip_collapsed is not None:
+      with self.subTest('text_roundtrip_collapsed'):
+        stream = io.StringIO()
+        part.render_to_text(
+            stream,
+            expanded_parent=False,
+            indent=indent,
+            roundtrip_mode=True,
+            render_context=render_context,
+        )
+        self.assertEqual(stream.getvalue(), expected_text_roundtrip_collapsed)
 
-    with self.subTest('text_roundtrip_expanded'):
-      stream = io.StringIO()
-      part.render_to_text(
-          stream,
-          expanded_parent=True,
-          indent=indent,
-          roundtrip_mode=True,
-          render_context={},
-      )
-      self.assertEqual(stream.getvalue(), expected_text_roundtrip_expanded)
+    if expected_text_roundtrip_expanded is not None:
+      with self.subTest('text_roundtrip_expanded'):
+        stream = io.StringIO()
+        part.render_to_text(
+            stream,
+            expanded_parent=True,
+            indent=indent,
+            roundtrip_mode=True,
+            render_context=render_context,
+        )
+        self.assertEqual(stream.getvalue(), expected_text_roundtrip_expanded)
 
-    with self.subTest('html'):
-      stream = io.StringIO()
-      part.render_to_html(stream, at_beginning_of_line=False, render_context={})
-      self.assertEqual(stream.getvalue(), expected_html)
+    if expected_html is not None:
+      with self.subTest('html'):
+        stream = io.StringIO()
+        part.render_to_html(
+            stream, at_beginning_of_line=False, render_context=render_context
+        )
+        self.assertEqual(stream.getvalue(), expected_html)
 
-    with self.subTest('html_at_beginning'):
-      stream = io.StringIO()
-      part.render_to_html(stream, at_beginning_of_line=True, render_context={})
-      self.assertEqual(stream.getvalue(), expected_html_at_beginning)
+    if expected_html_at_beginning is not None:
+      with self.subTest('html_at_beginning'):
+        stream = io.StringIO()
+        part.render_to_html(
+            stream, at_beginning_of_line=True, render_context=render_context
+        )
+        self.assertEqual(stream.getvalue(), expected_html_at_beginning)
 
   def test_multiline_text_part(self):
     part = basic_parts.Text('some text\nsecond line\nthird line')

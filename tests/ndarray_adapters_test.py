@@ -14,6 +14,10 @@
 
 """Tests for NDArray adapters and array visualization."""
 
+from logging import warn, warning
+import re
+import warnings
+
 from absl.testing import absltest
 from absl.testing import parameterized
 import jax.numpy as jnp
@@ -22,6 +26,7 @@ import torch
 import treescope
 from treescope import ndarray_adapters
 from treescope import type_registries
+from . import helpers
 
 
 class NdarrayAdaptersTest(parameterized.TestCase):
@@ -138,24 +143,38 @@ class NdarrayAdaptersTest(parameterized.TestCase):
 
     for fast in (True, False):
       with self.subTest("summary_fast" if fast else "summary_slow"):
-        summary_info_np = np_adapter.get_array_summary(array_np, fast=True)
-        summary_info = cur_adapter.get_array_summary(array, fast=True)
+        summary_info_np = helpers.ensure_text(
+            np_adapter.get_array_summary(array_np, fast=True)
+        )
+        summary_info = helpers.ensure_text(
+            cur_adapter.get_array_summary(array, fast=True)
+        )
         self.assertEqual(
             summary_info_np.split(" ", 1)[1], summary_info.split(" ", 1)[1]
         )
 
   def test_pytorch_named_axes_info(self):
     data = np.arange(19 * 23).reshape((19, 23))
-    array = torch.tensor(data).rename("foo", None)
-    adapter = type_registries.lookup_ndarray_adapter(array)
-    self.assertIsNotNone(adapter)
-    self.assertEqual(
-        adapter.get_axis_info_for_array_data(array),
-        (
-            ndarray_adapters.NamedPositionalAxisInfo(0, "foo", 19),
-            ndarray_adapters.PositionalAxisInfo(1, 23),
-        ),
-    )
+    with warnings.catch_warnings():
+      warnings.filterwarnings(
+          "ignore",
+          category=UserWarning,
+          module="torch",
+          message=re.escape(
+              "Named tensors and all their associated APIs are an experimental"
+              " feature and subject to change."
+          ),
+      )
+      array = torch.tensor(data).rename("foo", None)
+      adapter = type_registries.lookup_ndarray_adapter(array)
+      self.assertIsNotNone(adapter)
+      self.assertEqual(
+          adapter.get_axis_info_for_array_data(array),
+          (
+              ndarray_adapters.NamedPositionalAxisInfo(0, "foo", 19),
+              ndarray_adapters.PositionalAxisInfo(1, 23),
+          ),
+      )
 
   @parameterized.product(
       array_type=["numpy", "jax", "torch"],
