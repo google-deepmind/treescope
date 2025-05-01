@@ -35,6 +35,7 @@ def render_pydantic_model(
 ) -> rendering_parts.Rendering | type(NotImplemented):
   """Renders a pydantic model."""
   assert pydantic is not None, "pydantic is not available!"
+
   if pydantic.__version__.startswith("1."):
     fields = type(node).__fields__
   else:

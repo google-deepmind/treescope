@@ -162,6 +162,7 @@ myst_enable_extensions = [
 # nb_execution_mode can be overridden on a notebook level via .ipynb metadata
 nb_execution_mode = 'auto'
 nb_execution_allow_errors = False
+nb_execution_raise_on_error = True
 # nb_execution_excludepatterns = ['notebooks/*']
 
 # -- Options for katex ------------------------------------------------------

@@ -89,7 +89,24 @@ Once you've rendered an object, try clicking on it and pressing the `r` key!
 This turns on "roundtrip mode", and adds qualified names to every type in the
 visualization, making it easier to identify what the types in your object are.
 
-For more information on how to use Treescope, check out the [Treescope documentation](https://treescope.readthedocs.io).
+> [!TIP]
+> If Treescope's outputs are too verbose, or if you are using a terminal that
+> wraps lines, you can configure Treescope to abbreviate collapsed objects at a
+> given depth using:
+>
+> ```python
+> treescope.basic_interactive_setup(
+>     autovisualize_arrays=True,
+>     abbreviation_threshold=1,  # or a different value
+> )
+> ```
+>
+> You can also configure the abbreviation threshold manually by overriding
+> `treescope.abbreviation_threshold` using the `.set_globally` or `.set_scoped`
+> methods.
+
+For more information on how to use Treescope, check out the
+[Treescope documentation](https://treescope.readthedocs.io).
 
 Looking for a neural network library with first-class support for Treescope's
 visualization features?

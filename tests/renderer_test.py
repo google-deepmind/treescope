@@ -39,6 +39,7 @@ from treescope import lowering
 from treescope import rendering_parts
 from treescope.external import jax_support
 from tests.fixtures import treescope_examples_fixture as fixture_lib
+from . import helpers
 
 from . import helpers
 
