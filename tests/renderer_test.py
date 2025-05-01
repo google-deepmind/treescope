@@ -41,7 +41,6 @@ from treescope.external import jax_support
 from tests.fixtures import treescope_examples_fixture as fixture_lib
 from . import helpers
 
-from . import helpers
 
 @dataclasses.dataclass
 class CustomReprHTMLObject:
