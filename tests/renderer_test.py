@@ -29,8 +29,8 @@ from absl.testing import parameterized
 import jax
 import jax.numpy as jnp
 import numpy as np
-import omegaconf
-import pydantic
+import omegaconf  # pylint: disable=unused-import
+import pydantic  # pylint: disable=unused-import
 import torch
 import treescope
 from treescope import handlers

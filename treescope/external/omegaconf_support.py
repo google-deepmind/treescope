@@ -23,7 +23,7 @@ from treescope import canonical_aliases
 
 # pylint: disable=import-outside-toplevel
 try:
-  import omegaconf
+  import omegaconf  # pytype: disable=import-error
 except ImportError:
   omegaconf = None
 # pylint: enable=import-outside-toplevel
