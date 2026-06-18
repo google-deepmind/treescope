@@ -213,7 +213,9 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
     summary_parts = []
 
     # Drop axis names.
-    if hasattr(array, "names") and any(name is not None for name in array.names):
+    if hasattr(array, "names") and any(
+        name is not None for name in array.names
+    ):
       array = array.rename(None)
     size = np.prod(array.shape)
     if size > 0 and size < 100_000 and not fast:
