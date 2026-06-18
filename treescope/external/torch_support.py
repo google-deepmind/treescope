@@ -122,7 +122,8 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
       self, array: torch.Tensor
   ) -> tuple[ndarray_adapters.AxisInfo, ...]:
     infos = []
-    for i, (size, name) in enumerate(zip(array.shape, array.names)):
+    names = getattr(array, "names", [None] * len(array.shape))
+    for i, (size, name) in enumerate(zip(array.shape, names)):
       if name is None:
         infos.append(ndarray_adapters.PositionalAxisInfo(i, size))
       else:
@@ -198,7 +199,8 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
 
     always_show_parts.append(repr(array.dtype).removeprefix("torch."))
     name_parts = []
-    for size, name in zip(array.shape, array.names):
+    names = getattr(array, "names", [None] * len(array.shape))
+    for size, name in zip(array.shape, names):
       if name:
         name_parts.append(f"{name}:{size}")
       else:
@@ -211,7 +213,7 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
     summary_parts = []
 
     # Drop axis names.
-    if any(name is not None for name in array.names):
+    if hasattr(array, "names") and any(name is not None for name in array.names):
       array = array.rename(None)
     size = np.prod(array.shape)
     if size > 0 and size < 100_000 and not fast:

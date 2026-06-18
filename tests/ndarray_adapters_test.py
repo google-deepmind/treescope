@@ -154,6 +154,8 @@ class NdarrayAdaptersTest(parameterized.TestCase):
         )
 
   def test_pytorch_named_axes_info(self):
+    if not hasattr(torch.Tensor, "rename"):
+      self.skipTest("PyTorch named tensors are not supported in this version")
     data = np.arange(19 * 23).reshape((19, 23))
     with warnings.catch_warnings():
       warnings.filterwarnings(
