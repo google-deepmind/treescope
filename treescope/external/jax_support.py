@@ -270,11 +270,6 @@ def faster_array_repr(array: jax.Array) -> str:
   if array.size < np.get_printoptions()["threshold"]:
     return repr(array)
 
-  if array.aval is not None and array.aval.weak_type:
-    dtype_str = f"dtype={array.dtype.name}, weak_type=True)"
-  else:
-    dtype_str = f"dtype={array.dtype.name})"
-
   edgeitems = np.get_printoptions()["edgeitems"]
   edge_items_per_axis = []
   for size in array.shape:
@@ -282,6 +277,32 @@ def faster_array_repr(array: jax.Array) -> str:
       edge_items_per_axis.append(edgeitems)
     else:
       edge_items_per_axis.append(None)
+
+  if _is_subdtype(array.dtype, jax.dtypes.prng_key):
+    key_data = jax.random.key_data(array)
+    key_data_edges, _ = truncate_array_and_mask(
+        key_data,
+        np.ones((1,) * key_data.ndim, dtype=jnp.bool_),
+        edge_items_per_axis=tuple(edge_items_per_axis)
+        + (None,) * (key_data.ndim - array.ndim),
+    )
+    datastring = np.array2string(
+        np.array(key_data_edges), threshold=0, edgeitems=edgeitems
+    )
+    return (
+        f"Array({array.shape}, dtype={array.dtype.name}) overlaying:\n"
+        f"{datastring}"
+    )
+
+  if not isinstance(array.dtype, np.dtype):
+    # Let JAX render extended dtypes that Treescope does not handle specially.
+    return repr(array)
+
+  if array.aval is not None and array.aval.weak_type:
+    dtype_str = f"dtype={array.dtype.name}, weak_type=True)"
+  else:
+    dtype_str = f"dtype={array.dtype.name})"
+
   array_edges, _ = truncate_array_and_mask(
       array,
       np.ones((1,) * array.ndim, dtype=jnp.bool_),

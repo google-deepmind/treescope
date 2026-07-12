@@ -16,6 +16,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from jax import numpy as jnp
 import jax
+import numpy as np
 import treescope.external.jax_support
 from . import helpers
 
@@ -43,6 +44,17 @@ class JaxSupportTest(parameterized.TestCase):
         )
     )
     self.assertEqual(full_summary, "jax.Array key<fry>(10,)")
+
+  @parameterized.product(
+      impl=("threefry2x32", "rbg", "unsafe_rbg"),
+      shape=((10,), (10, 9)),
+  )
+  def test_faster_array_repr_prng_key(self, impl, shape):
+    keys = jax.random.split(jax.random.key(0, impl=impl), shape)
+    with np.printoptions(threshold=5):
+      self.assertEqual(
+          treescope.external.jax_support.faster_array_repr(keys), repr(keys)
+      )
 
 
 if __name__ == "__main__":
