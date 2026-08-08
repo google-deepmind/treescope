@@ -41,7 +41,7 @@ class AbbreviationColor(basic_parts.BaseSpanGroup):
     return CSSStyleRule(html_escaping.without_repeated_whitespace("""
       .color_abbrev
       {
-        color: #682a00;
+        color: var(--treescope-abbreviation-color);
       }
     """))
 
@@ -66,10 +66,10 @@ class CommentColor(basic_parts.BaseSpanGroup):
   def _span_css_rule(self, context: HtmlContextForSetup) -> CSSStyleRule:
     return CSSStyleRule(html_escaping.without_repeated_whitespace("""
       .color_comment {
-          color: #aaaaaa;
+          color: var(--treescope-comment-color);
       }
       .color_comment a:not(:hover){
-          color: #aaaaaa;
+          color: var(--treescope-comment-color);
       }
     """))
 
@@ -94,7 +94,7 @@ class ErrorColor(basic_parts.BaseSpanGroup):
   def _span_css_rule(self, context: HtmlContextForSetup) -> CSSStyleRule:
     return CSSStyleRule(html_escaping.without_repeated_whitespace("""
       .color_error {
-          color: red;
+          color: var(--treescope-error-color);
       }
     """))
 
@@ -119,7 +119,7 @@ class DeferredPlaceholderStyle(basic_parts.BaseSpanGroup):
   def _span_css_rule(self, context: HtmlContextForSetup) -> CSSStyleRule:
     return CSSStyleRule(html_escaping.without_repeated_whitespace("""
       .deferred_placeholder {
-          color: #a7a7a7;
+          color: var(--treescope-deferred-color);
           font-style: italic;
       }
     """))
@@ -151,7 +151,7 @@ class CommentColorWhenExpanded(basic_parts.BaseSpanGroup):
   def _span_css_rule(self, context: HtmlContextForSetup) -> CSSStyleRule:
     return CSSStyleRule(html_escaping.without_repeated_whitespace(f"""
       .color_comment_when_expanded:not({context.collapsed_selector} *) {{
-          color: #aaaaaa;
+          color: var(--treescope-comment-color);
       }}
     """))
 

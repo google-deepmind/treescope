@@ -23,6 +23,7 @@ from absl.testing import parameterized
 import jax
 from treescope import lowering
 from treescope import type_registries
+from treescope._internal.api import theme
 from treescope._internal.parts import basic_parts
 from treescope._internal.parts import common_structures
 from treescope._internal.parts import part_interface
@@ -1186,6 +1187,30 @@ class RepresentationPartsTest(parameterized.TestCase):
       self.assertContainsInOrder(
           ['[mock A, b:y]', '[mock B, b:y]'], html_output
       )
+
+  def test_theme(self):
+    part = MockRenderableTreePart('A')
+    with self.subTest('light_by_default'):
+      self.assertIn(
+          'class="treescope_root theme_light"',
+          lowering.render_to_html_as_root(part),
+      )
+    with self.subTest('dark'):
+      with theme.theme.set_scoped('dark'):
+        self.assertIn(
+            'class="treescope_root theme_dark"',
+            lowering.render_to_html_as_root(part),
+        )
+    with self.subTest('roundtrip_mode_is_preserved'):
+      with theme.theme.set_scoped('dark'):
+        self.assertIn(
+            'class="treescope_root theme_dark roundtrip_mode"',
+            lowering.render_to_html_as_root(part, roundtrip=True),
+        )
+    with self.subTest('invalid'):
+      with theme.theme.set_scoped('sepia'):
+        with self.assertRaisesRegex(ValueError, "but got 'sepia'"):
+          lowering.render_to_html_as_root(part)
 
   def test_build_qualified_type_name(self):
     type_registries.update_registries_for_imports()
