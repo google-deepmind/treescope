@@ -19,10 +19,10 @@ from typing import Literal
 from treescope import context
 
 
-Theme = Literal["light", "dark"]
+Theme = Literal["light", "dark", "auto"]
 
 theme: context.ContextualValue[Theme] = context.ContextualValue(
     module=__name__,
     qualname="theme",
-    initial_value="light",
+    initial_value="auto",
 )
