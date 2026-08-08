@@ -349,7 +349,8 @@ def _render_to_html_as_root_streaming(
       content-visibility: auto;
       contain-intrinsic-size: auto none;
     }
-    .treescope_root.theme_dark {
+    .treescope_root.theme_dark,
+    :host([data-treescope-theme="dark"]) .treescope_root.theme_auto {
       color-scheme: dark;
       --treescope-bg: #1f1f1f;
       --treescope-fg: #cccccc;
@@ -372,6 +373,12 @@ def _render_to_html_as_root_streaming(
       --treescope-tooltip-border-color: #313131;
       --treescope-input-color: #989898;
     }
+    :host([data-treescope-theme="dark"]) .treescope_root.theme_auto,
+    :host([data-treescope-theme="light"]) .treescope_root.theme_auto {
+      /* Keep the page's own background, since themes disagree about which
+         off-white or dark gray to use. */
+      --treescope-bg: transparent;
+    }
   """))
   stream.write("</style>")
   # These scripts allow us to defer execution of javascript blocks until after
@@ -384,9 +391,9 @@ def _render_to_html_as_root_streaming(
 
   # Render the root node.
   requested_theme = theme_lib.theme.get()
-  if requested_theme not in ("light", "dark"):
+  if requested_theme not in ("light", "dark", "auto"):
     raise ValueError(
-        "`treescope.theme` must be 'light' or 'dark', but got"
+        "`treescope.theme` must be 'light', 'dark', or 'auto', but got"
         f" {requested_theme!r}"
     )
   classnames = f"treescope_root theme_{requested_theme}"
