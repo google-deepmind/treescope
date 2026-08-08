@@ -141,6 +141,24 @@ const root = (
   .filter((elt) => !elt.dataset.setup)
 )[0];
 root.dataset.setup = 1;
+// Detect which theme the page around this rendering uses, so that renderings
+// using the "auto" theme can match it. We can't use the
+// `prefers-color-scheme` media query, because notebooks usually have a theme
+// setting of their own that is independent of the browser's, and because some
+// of them report the query incorrectly inside their output cells. Instead we
+// look at the text color we inherit from the page: if the surrounding text is
+// light, it was meant to be read against a dark background. Colors are
+// inherited across the shadow root boundary, so this has to run before the
+// rendering sets a color of its own. If we can't tell, we leave the attribute
+// unset, and the rendering falls back to its own light background.
+const inheritedColor = window.getComputedStyle(root).color;
+const colorChannels = inheritedColor.match(/[\\d.]+/g);
+if (colorChannels && colorChannels.length >= 3) {
+  const [r, g, b] = colorChannels.map(Number);
+  // Perceptual luminance, as in arrayviz's contrasting-color logic.
+  const pageIsDark = 0.2126 * r + 0.7152 * g + 0.0722 * b > 128;
+  root.dataset.treescopeTheme = pageIsDark ? "dark" : "light";
+}
 const msg = document.createElement("span");
 msg.style = "color: #cccccc; font-family: monospace;";
 msg.textContent = "(Loading...)";

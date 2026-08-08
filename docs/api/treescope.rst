@@ -105,6 +105,7 @@ configured globally using `context.ContextualValue.set_globally`.
   default_diverging_colormap
   default_sequential_colormap
   active_autovisualizer
+  theme
   active_renderer
   default_magic_autovisualizer
   active_expansion_strategy
