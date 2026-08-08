@@ -70,6 +70,9 @@ from ._internal.api.autovisualize import (
     Autovisualizer,
     active_autovisualizer,
 )
+from ._internal.api.theme import (
+    theme,
+)
 from ._internal.api.default_renderer import (
     active_renderer,
     active_expansion_strategy,
@@ -119,6 +122,15 @@ active_autovisualizer: context.ContextualValue[Autovisualizer | None] = (
 This can be overridden interactively to enable rich visualizations in
 treescope. Users are free to set this to an arbitrary renderer of their
 choice; a common choice is arrayviz's `ArrayAutovisualizer()`.
+"""
+
+theme: context.ContextualValue[typing.Literal['light', 'dark']] = theme
+"""The theme to use when rendering a tree to HTML.
+
+This can be set to ``"light"`` (the default), to render dark text on a light
+background, or to ``"dark"``, to render light text on a dark background.
+
+This has no effect on text renderings, which are never colored.
 """
 
 active_renderer: context.ContextualValue[renderers.TreescopeRenderer] = (
