@@ -270,6 +270,14 @@ def faster_array_repr(array: jax.Array) -> str:
   if array.size < np.get_printoptions()["threshold"]:
     return repr(array)
 
+  is_prng_key = jax.dtypes.issubdtype(array.dtype, jax.dtypes.prng_key)
+  if is_prng_key:
+    # Typed PRNG keys deliberately cannot be converted to NumPy arrays. Render
+    # their underlying key data instead, matching JAX's native representation.
+    display_array = jax.random.key_data(array)
+  else:
+    display_array = array
+
   if array.aval is not None and array.aval.weak_type:
     dtype_str = f"dtype={array.dtype.name}, weak_type=True)"
   else:
@@ -277,16 +285,26 @@ def faster_array_repr(array: jax.Array) -> str:
 
   edgeitems = np.get_printoptions()["edgeitems"]
   edge_items_per_axis = []
-  for size in array.shape:
+  for size in display_array.shape:
     if size > 2 * edgeitems + 1:
       edge_items_per_axis.append(edgeitems)
     else:
       edge_items_per_axis.append(None)
   array_edges, _ = truncate_array_and_mask(
-      array,
-      np.ones((1,) * array.ndim, dtype=jnp.bool_),
+      display_array,
+      np.ones((1,) * display_array.ndim, dtype=jnp.bool_),
       edge_items_per_axis=tuple(edge_items_per_axis),
   )
+  if is_prng_key:
+    return (
+        f"Array({array.shape}, dtype={array.dtype}) overlaying:\n"
+        + np.array2string(
+            np.array(array_edges),
+            separator=" ",
+            threshold=0,
+            edgeitems=edgeitems,
+        )
+    )
   prefix = "Array("
   datastring = np.array2string(
       np.array(array_edges),
