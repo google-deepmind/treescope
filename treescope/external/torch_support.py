@@ -230,7 +230,7 @@ class TorchTensorAdapter(ndarray_adapters.NDArrayAdapter[torch.Tensor]):
         any_finite = torch.any(isfinite)
         inf_to_nan = torch.where(isfinite, array, torch.nan)
         mean = torch.nanmean(inf_to_nan)
-        std = torch.nanmean(torch.square(inf_to_nan - mean))
+        std = torch.sqrt(torch.nanmean(torch.square(inf_to_nan - mean)))
 
         if any_finite:
           summary_parts.append(f" ≈{float(mean):.2} ±{float(std):.2}")

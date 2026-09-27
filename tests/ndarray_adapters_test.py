@@ -144,14 +144,39 @@ class NdarrayAdaptersTest(parameterized.TestCase):
     for fast in (True, False):
       with self.subTest("summary_fast" if fast else "summary_slow"):
         summary_info_np = helpers.ensure_text(
-            np_adapter.get_array_summary(array_np, fast=True)
+            np_adapter.get_array_summary(array_np, fast=fast)
         )
         summary_info = helpers.ensure_text(
-            cur_adapter.get_array_summary(array, fast=True)
+            cur_adapter.get_array_summary(array, fast=fast)
         )
         self.assertEqual(
             summary_info_np.split(" ", 1)[1], summary_info.split(" ", 1)[1]
         )
+
+  @parameterized.product(
+      array_type=["numpy", "jax", "torch"],
+      values=[
+          [1.0, 5.0],
+          [3.0],
+          [1.0, 5.0, np.nan],
+          [1.0, 5.0, np.nan, np.inf, -np.inf],
+      ],
+  )
+  def test_array_summary_standard_deviation(self, array_type, values):
+    array_np = np.array(values, dtype=np.float32)
+    if array_type == "numpy":
+      array = array_np
+    elif array_type == "jax":
+      array = jnp.array(array_np)
+    else:
+      array = torch.tensor(array_np)
+
+    adapter = type_registries.lookup_ndarray_adapter(array)
+    summary = helpers.ensure_text(adapter.get_array_summary(array, fast=False))
+    finite_values = array_np[np.isfinite(array_np)]
+    expected_mean = float(np.mean(finite_values))
+    expected_std = float(np.std(finite_values))
+    self.assertIn(f" ≈{expected_mean:.2} ±{expected_std:.2}", summary)
 
   def test_pytorch_named_axes_info(self):
     if not hasattr(torch.Tensor, "rename"):

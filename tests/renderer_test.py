@@ -413,11 +413,11 @@ class TreescopeRendererTest(parameterized.TestCase):
               np.arange(3 * 7, dtype=np.float32).reshape((3, 7))
           ).requires_grad_(),
           expected_collapsed=(
-              """<torch.Tensor float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True>"""
+              """<torch.Tensor float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True>"""
           ),
           expected_expanded=textwrap.dedent(
               """\
-              # torch.Tensor float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True
+              # torch.Tensor float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True
                 tensor([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
                         [ 7.,  8.,  9., 10., 11., 12., 13.],
                         [14., 15., 16., 17., 18., 19., 20.]], requires_grad=True)"""
@@ -429,11 +429,11 @@ class TreescopeRendererTest(parameterized.TestCase):
               torch.tensor(np.arange(3 * 7, dtype=np.float32).reshape((3, 7)))
           ),
           expected_collapsed=(
-              """<torch.Tensor float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True grad=<Tensor>>"""
+              """<torch.Tensor float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True grad=<Tensor>>"""
           ),
           expected_expanded=textwrap.dedent(
               """\
-              # torch.Tensor float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True grad=<Tensor>
+              # torch.Tensor float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=True grad=<Tensor>
                 tensor([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
                         [ 7.,  8.,  9., 10., 11., 12., 13.],
                         [14., 15., 16., 17., 18., 19., 20.]], requires_grad=True)"""
@@ -445,11 +445,11 @@ class TreescopeRendererTest(parameterized.TestCase):
               torch.tensor(np.arange(3 * 7, dtype=np.float32).reshape((3, 7)))
           ),
           expected_collapsed=(
-              """<torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20>"""
+              """<torch.nn.Parameter float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20>"""
           ),
           expected_expanded=textwrap.dedent(
               """\
-              # torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20
+              # torch.nn.Parameter float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20
                 Parameter containing:
                 tensor([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
                         [ 7.,  8.,  9., 10., 11., 12., 13.],
@@ -462,10 +462,10 @@ class TreescopeRendererTest(parameterized.TestCase):
               torch.tensor(np.arange(3 * 7, dtype=np.float32).reshape((3, 7)))
           ).requires_grad_(False),
           expected_collapsed=(
-              """<torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=False>"""
+              """<torch.nn.Parameter float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=False>"""
           ),
           expected_expanded=textwrap.dedent("""\
-              # torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=False
+              # torch.nn.Parameter float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20 requires_grad=False
                 Parameter containing:
                 tensor([[ 0.,  1.,  2.,  3.,  4.,  5.,  6.],
                         [ 7.,  8.,  9., 10., 11., 12., 13.],
@@ -602,9 +602,9 @@ class TreescopeRendererTest(parameterized.TestCase):
               " foo=<torch.nn.Parameter float32(5,) ≈1.0 ±0.0 [≥1.0, ≤1.0]"
               " nonzero:5>, bar=torch.tensor([0., 0., 0., 0., 0.]),"
               " linear=Linear(in_features=10, out_features=10, training=True,"
-              " weight=<torch.nn.Parameter float32(10, 10) ≈-0.008 ±0.028"
+              " weight=<torch.nn.Parameter float32(10, 10) ≈-0.008 ±0.17"
               " [≥-0.32, ≤0.3] nonzero:100>, bias=<torch.nn.Parameter"
-              " float32(10,) ≈0.008 ±0.04 [≥-0.31, ≤0.31] nonzero:10>, ),"
+              " float32(10,) ≈0.008 ±0.2 [≥-0.31, ≤0.31] nonzero:10>, ),"
               " mod_list=ModuleList(training=True, (0):"
               " LayerNorm(normalized_shape=(10,), eps=1e-05,"
               " elementwise_affine=True, training=True,"
@@ -621,7 +621,7 @@ class TreescopeRendererTest(parameterized.TestCase):
                 # Buffers:
                 bar=torch.tensor([0., 0., 0., 0., 0.]),
                 # Child modules:
-                linear=Linear(in_features=10, out_features=10, training=True, weight=<torch.nn.Parameter float32(10, 10) ≈-0.008 ±0.028 [≥-0.32, ≤0.3] nonzero:100>, bias=<torch.nn.Parameter float32(10,) ≈0.008 ±0.04 [≥-0.31, ≤0.31] nonzero:10>, ),
+                linear=Linear(in_features=10, out_features=10, training=True, weight=<torch.nn.Parameter float32(10, 10) ≈-0.008 ±0.17 [≥-0.32, ≤0.3] nonzero:100>, bias=<torch.nn.Parameter float32(10,) ≈0.008 ±0.2 [≥-0.31, ≤0.31] nonzero:10>, ),
                 mod_list=ModuleList(training=True, (0): LayerNorm(normalized_shape=(10,), eps=1e-05, elementwise_affine=True, training=True, weight=<torch.nn.Parameter float32(10,) ≈1.0 ±0.0 [≥1.0, ≤1.0] nonzero:10>, bias=<torch.nn.Parameter float32(10,) ≈0.0 ±0.0 [≥0.0, ≤0.0] zero:10>, ), (1): SiLU(inplace=False, training=True, ), ),
               )"""),
           expected_roundtrip=textwrap.dedent("""\
@@ -632,7 +632,7 @@ class TreescopeRendererTest(parameterized.TestCase):
                 # Buffers:
                 bar=torch.tensor([0., 0., 0., 0., 0.]),
                 # Child modules:
-                linear=<torch.nn.modules.linear.Linear(in_features=10, out_features=10, training=True, weight=<torch.nn.Parameter float32(10, 10) ≈-0.008 ±0.028 [≥-0.32, ≤0.3] nonzero:100>, bias=<torch.nn.Parameter float32(10,) ≈0.008 ±0.04 [≥-0.31, ≤0.31] nonzero:10>, )>,
+                linear=<torch.nn.modules.linear.Linear(in_features=10, out_features=10, training=True, weight=<torch.nn.Parameter float32(10, 10) ≈-0.008 ±0.17 [≥-0.32, ≤0.3] nonzero:100>, bias=<torch.nn.Parameter float32(10,) ≈0.008 ±0.2 [≥-0.31, ≤0.31] nonzero:10>, )>,
                 mod_list=<torch.nn.modules.container.ModuleList(training=True, (0): <torch.nn.modules.normalization.LayerNorm(normalized_shape=(10,), eps=1e-05, elementwise_affine=True, training=True, weight=<torch.nn.Parameter float32(10,) ≈1.0 ±0.0 [≥1.0, ≤1.0] nonzero:10>, bias=<torch.nn.Parameter float32(10,) ≈0.0 ±0.0 [≥0.0, ≤0.0] zero:10>, )>, (1): <torch.nn.modules.activation.SiLU(inplace=False, training=True, )>, )>,
               )>"""),
       ),
@@ -657,8 +657,8 @@ class TreescopeRendererTest(parameterized.TestCase):
                 linear=Linear(
                   in_features=10, out_features=10, training=True,
                   # Parameters:
-                  weight=<torch.nn.Parameter float32(10, 10) ≈-0.008 ±0.028 [≥-0.32, ≤0.3] nonzero:100>,
-                  bias=<torch.nn.Parameter float32(10,) ≈0.008 ±0.04 [≥-0.31, ≤0.31] nonzero:10>,
+                  weight=<torch.nn.Parameter float32(10, 10) ≈-0.008 ±0.17 [≥-0.32, ≤0.3] nonzero:100>,
+                  bias=<torch.nn.Parameter float32(10,) ≈0.008 ±0.2 [≥-0.31, ≤0.31] nonzero:10>,
                 ),
                 mod_list=ModuleList(
                   training=True,
@@ -939,7 +939,7 @@ class TreescopeRendererTest(parameterized.TestCase):
           expected_collapsed="[<Param float32(3, 7)>]",
           expected_expanded=textwrap.dedent("""\
               [
-                <torch.nn.Parameter float32(3, 7) ≈1e+01 ±3.7e+01 [≥0.0, ≤2e+01] zero:1 nonzero:20>,
+                <torch.nn.Parameter float32(3, 7) ≈1e+01 ±6.1 [≥0.0, ≤2e+01] zero:1 nonzero:20>,
               ]"""),
       ),
   )
