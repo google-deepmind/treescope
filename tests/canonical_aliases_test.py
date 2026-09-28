@@ -190,6 +190,29 @@ class TreescopeCanonicalAliasesTest(parameterized.TestCase):
           ),
       )
 
+  @parameterized.named_parameters(("mutable", []), ("filtered", None))
+  def test_magic_aliases_respect_local_shadowing(self, numpy):
+    # The argument shadows the module imported in this test's global scope.
+    targets = (numpy, globals()["numpy"], fixture_lib)
+    scope = {**globals(), **locals()}
+    with fresh_canonical_aliases():
+      with canonical_aliases.relative_alias_names(scope):
+        expected = [
+            canonical_aliases.lookup_alias(value, allow_relative=True)
+            for value in targets
+        ]
+      with canonical_aliases.relative_alias_names("magic"):
+        actual = [
+            canonical_aliases.lookup_alias(value, allow_relative=True)
+            for value in targets
+        ]
+
+    self.assertEqual(actual, expected)
+    if numpy is not None:
+      self.assertEqual(actual[0], canonical_aliases.LocalNamePath("numpy", ()))
+      self.assertIs(actual[0].retrieve(scope), numpy)
+    self.assertIsInstance(actual[1], canonical_aliases.ModuleAttributePath)
+
   @parameterized.named_parameters(
       dict(
           testcase_name="ordinary_class",
