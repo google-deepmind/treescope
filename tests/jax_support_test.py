@@ -16,6 +16,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from jax import numpy as jnp
 import jax
+import numpy as np
 import treescope.external.jax_support
 from . import helpers
 
@@ -31,6 +32,18 @@ class JaxSupportTest(parameterized.TestCase):
     self.assertEqual(
         treescope.external.jax_support.summarize_array_data(inp), expected
     )
+
+  def test_faster_array_repr_large_prng_keys(self):
+    keys = jax.random.split(jax.random.key(0, impl="threefry2x32"), 10)
+    key_data = np.asarray(jax.random.key_data(keys))
+
+    with np.printoptions(threshold=5, edgeitems=2):
+      rendered = treescope.external.jax_support.faster_array_repr(keys)
+
+    self.assertIn("Array((10,), dtype=key<fry>) overlaying:", rendered)
+    self.assertIn("...", rendered)
+    self.assertIn(str(key_data[0, 0]), rendered)
+    self.assertIn(str(key_data[-1, -1]), rendered)
 
   def test_summarize_prng_key(self):
     keys = jax.random.split(jax.random.key(0, impl="threefry2x32"), 10)

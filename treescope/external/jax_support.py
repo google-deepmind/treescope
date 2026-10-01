@@ -282,11 +282,31 @@ def faster_array_repr(array: jax.Array) -> str:
       edge_items_per_axis.append(edgeitems)
     else:
       edge_items_per_axis.append(None)
+
+  is_prng_key = jax.dtypes.issubdtype(array.dtype, jax.dtypes.prng_key)
+  if is_prng_key:
+    array_to_render = jax.random.key_data(array)
+    edge_items_per_axis.extend(
+        [None] * (array_to_render.ndim - array.ndim)
+    )
+  else:
+    array_to_render = array
+
   array_edges, _ = truncate_array_and_mask(
-      array,
-      np.ones((1,) * array.ndim, dtype=jnp.bool_),
+      array_to_render,
+      np.ones((1,) * array_to_render.ndim, dtype=jnp.bool_),
       edge_items_per_axis=tuple(edge_items_per_axis),
   )
+
+  if is_prng_key:
+    datastring = np.array2string(
+        np.array(array_edges),
+        separator=" ",
+        threshold=0,
+        edgeitems=edgeitems,
+    )
+    return f"Array({array.shape}, {dtype_str} overlaying:\n{datastring}"
+
   prefix = "Array("
   datastring = np.array2string(
       np.array(array_edges),
