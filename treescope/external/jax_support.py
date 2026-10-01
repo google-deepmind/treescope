@@ -117,6 +117,7 @@ def _truncate_part_with_slices(
     prefix_slices: tuple[slice, ...],
     remaining_edge_items_per_axis: tuple[int | None, ...],
     xnp=None,
+    slice_out_sharding=None,
 ) -> tuple[jax.Array, jax.Array]:
   """Helper to truncate names of an array.
 
@@ -128,6 +129,8 @@ def _truncate_part_with_slices(
     remaining_edge_items_per_axis: Number of edge items to keep for each axis,
       ignoring any axes whose slices are already computed in `prefix_slices`.
     xnp: backend to use (numpy or jax.numpy).
+    slice_out_sharding: Optional replicated sharding to use when converting a
+      slice on an explicitly-sharded axis into a gather.
 
   Returns:
     Truncated array and mask, which will both be the same shape.
@@ -142,7 +145,34 @@ def _truncate_part_with_slices(
   if not remaining_edge_items_per_axis:
     # Perform the base case slice.
     assert len(prefix_slices) == len(array.shape)
-    truncated_array = array[prefix_slices]
+    if slice_out_sharding is None:
+      truncated_array = array[prefix_slices]
+    else:
+      first_sliced_axis = next(
+          (
+              axis
+              for axis, array_slice in enumerate(prefix_slices)
+              if array_slice != slice(None)
+          ),
+          None,
+      )
+      if first_sliced_axis is None:
+        truncated_array = array
+      else:
+        array_slice = prefix_slices[first_sliced_axis]
+        start, stop, step = array_slice.indices(array.shape[first_sliced_axis])
+        indices = xnp.arange(start, stop, step)
+        gather_index = (
+            (slice(None),) * first_sliced_axis
+            + (indices,)
+            + (slice(None),) * (array.ndim - first_sliced_axis - 1)
+        )
+        truncated_array = array.at[gather_index].get(
+            out_sharding=slice_out_sharding
+        )
+        remaining_slices = list(prefix_slices)
+        remaining_slices[first_sliced_axis] = slice(None)
+        truncated_array = truncated_array[tuple(remaining_slices)]
 
     valid_mask_slices = tuple(
         slice(None) if mask.shape[i] == 1 else array_slice
@@ -165,6 +195,7 @@ def _truncate_part_with_slices(
         prefix_slices=prefix_slices + (slice(None),),
         remaining_edge_items_per_axis=remaining_edge_items_per_axis[1:],
         xnp=xnp,
+        slice_out_sharding=slice_out_sharding,
     )
   else:
     assert array.shape[axis] > 2 * edge_items
@@ -174,6 +205,7 @@ def _truncate_part_with_slices(
         prefix_slices=prefix_slices + (slice(None, edge_items),),
         remaining_edge_items_per_axis=remaining_edge_items_per_axis[1:],
         xnp=xnp,
+        slice_out_sharding=slice_out_sharding,
     )
     result_b, valid_b = _truncate_part_with_slices(
         array,
@@ -181,6 +213,7 @@ def _truncate_part_with_slices(
         prefix_slices=prefix_slices + (slice(-edge_items, None),),
         remaining_edge_items_per_axis=remaining_edge_items_per_axis[1:],
         xnp=xnp,
+        slice_out_sharding=slice_out_sharding,
     )
     padding_shape = list(result_a.shape)
     padding_shape[axis] = 1
@@ -219,35 +252,50 @@ def truncate_array_and_mask(
   """
   assert jax is not None, "JAX is not available."
   sharding_kwargs = {}
-  if hasattr(array, "sharding") and hasattr(
-      array.sharding, "_device_assignment"
-  ):
+  slice_out_sharding = None
+  if hasattr(array, "sharding"):
     # _truncate_part_with_slices usually returns slices that have odd
-    # dimensions, which aren't divisible by most shardings. Unfortunately,
-    # the XLA GSPMD partitioner sometimes still infers a sharding over one of
-    # these axes, which then leads to partitioning errors in JAX whenever we
-    # try to `device_get` the resulting array or call any additional operations
-    # on it. To avoid this, we'd like to tell JAX to always produce an output
-    # that is not sharded over any axis. Unfortunately, this is difficult
-    # because JAX requires the in_shardings and out_shardings to have the same
-    # devices in the same internal order, and at the time of writing JAX does
-    # not provide any public API to look up the order of the devices in a
-    # sharding (it allows looking up the device *set*, but not their order).
-    # Whether or not this error happens seems to be somewhat nondeterministic.
-    # To avoid this, we use the private property `_device_assignment` of
-    # each sharding in order to figure out what device order it has, and then
-    # explicitly request a fully-replicated output that is definitely safe to
-    # retrieve.
-    sharding_kwargs["out_shardings"] = jax.sharding.NamedSharding(
-        jax.sharding.Mesh(array.sharding._device_assignment, "x"),  # pylint: disable=protected-access
-        jax.sharding.PartitionSpec(),
-    )
+    # dimensions, which aren't divisible by most shardings. Always request a
+    # fully-replicated output so that the truncated data is safe to retrieve.
+    if isinstance(array.sharding, jax.sharding.NamedSharding):
+      output_sharding = jax.sharding.NamedSharding(
+          array.sharding.mesh, jax.sharding.PartitionSpec()
+      )
+    elif hasattr(array.sharding, "_device_assignment"):
+      # JAX does not expose the device order for every Sharding implementation,
+      # so retain the existing private fallback for non-NamedSharding inputs.
+      output_sharding = jax.sharding.NamedSharding(
+          jax.sharding.Mesh(
+              array.sharding._device_assignment, "x"  # pylint: disable=protected-access
+          ),
+          jax.sharding.PartitionSpec(),
+      )
+    else:
+      output_sharding = None
+
+    if output_sharding is not None:
+      sharding_kwargs["out_shardings"] = output_sharding
+
+      # With explicit sharding, a slice itself fails when the sliced dimension
+      # is not divisible by the mesh axis, before `out_shardings` can take
+      # effect. Convert the first shrinking slice to a gather with a replicated
+      # output.
+      if (
+          isinstance(array.sharding, jax.sharding.NamedSharding)
+          and hasattr(jax.sharding, "AxisType")
+          and hasattr(array.sharding.mesh, "axis_types")
+          and jax.sharding.AxisType.Explicit in array.sharding.mesh.axis_types
+      ):
+        slice_out_sharding = output_sharding
+
   if array.size < SUMMARIZE_USING_NUMPY_THRESHOLD and safe_to_summarize(array):
     fn = functools.partial(_truncate_part_with_slices, xnp=np)
   else:
-    fn = jax.jit(
-        _truncate_part_with_slices, static_argnums=(2, 3), **sharding_kwargs
+    truncate_part = functools.partial(
+        _truncate_part_with_slices,
+        slice_out_sharding=slice_out_sharding,
     )
+    fn = jax.jit(truncate_part, static_argnums=(2, 3), **sharding_kwargs)
   return fn(array, mask, (), edge_items_per_axis)
 
 

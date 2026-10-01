@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import subprocess
+import sys
+import textwrap
+
 from absl.testing import absltest
 from absl.testing import parameterized
 from jax import numpy as jnp
@@ -31,6 +36,57 @@ class JaxSupportTest(parameterized.TestCase):
     self.assertEqual(
         treescope.external.jax_support.summarize_array_data(inp), expected
     )
+
+  def test_truncate_explicitly_sharded_array(self):
+    if not hasattr(jax.sharding, "AxisType"):
+      self.skipTest("JAX does not support explicit sharding.")
+
+    env = os.environ.copy()
+    env["JAX_PLATFORMS"] = "cpu"
+    env["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
+    script = textwrap.dedent(
+        """
+        import jax
+        import numpy as np
+        import treescope.external.jax_support
+
+        devices = np.asarray(jax.devices())
+        mesh = jax.sharding.Mesh(
+            devices.reshape((1, 4)),
+            axis_names=("dp", "tp"),
+            axis_types=(
+                jax.sharding.AxisType.Explicit,
+                jax.sharding.AxisType.Explicit,
+            ),
+        )
+        sharding = jax.sharding.NamedSharding(
+            mesh, jax.sharding.PartitionSpec("tp", None)
+        )
+        original = np.arange(1600 * 64, dtype=np.int32).reshape((1600, 64))
+        array = jax.device_put(original, sharding)
+
+        truncated, valid = (
+            treescope.external.jax_support.JAXArrayAdapter()
+            .get_array_data_with_truncation(array, None, (3, 3))
+        )
+
+        assert truncated.shape == (7, 7)
+        np.testing.assert_array_equal(truncated[:3, :3], original[:3, :3])
+        np.testing.assert_array_equal(truncated[-3:, -3:], original[-3:, -3:])
+        expected_valid = np.ones((7, 7), dtype=bool)
+        expected_valid[3, :] = False
+        expected_valid[:, 3] = False
+        np.testing.assert_array_equal(valid, expected_valid)
+        """
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    self.assertEqual(completed.returncode, 0, completed.stderr)
 
   def test_summarize_prng_key(self):
     keys = jax.random.split(jax.random.key(0, impl="threefry2x32"), 10)
