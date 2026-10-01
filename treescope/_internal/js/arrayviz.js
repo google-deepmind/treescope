@@ -994,7 +994,7 @@ const arrayviz = (() => {
       slider.min = spec.start;
       slider.max = spec.end - 1;
       slider.step = 1;
-      slider.style.width = `calc(max(40ch, ${size}px))`;
+      slider.style.width = `calc(min(500px, max(40ch, ${size}px)))`;
       currentSliceBox.appendChild(slider);
       const sliceSliderCallback = ((evt) => {
         slider.value = evt.target.value;
