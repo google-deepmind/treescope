@@ -181,7 +181,7 @@ def render_enum(
   """Renders an enum (roundtrippably, unlike the normal enum `repr`)."""
   del subtree_renderer
   cls = type(node)
-  if node is getattr(cls, node.name):
+  if node.name is not None and node is getattr(cls, node.name, None):
     return rendering_parts.build_one_line_tree_node(
         rendering_parts.siblings_with_annotations(
             rendering_parts.maybe_qualified_type_name(cls),
@@ -191,6 +191,14 @@ def render_enum(
                     rendering_parts.text(f"  # value: {repr(node.value)}")
                 )
             ],
+        ),
+        path,
+    )
+  elif isinstance(node, enum.Flag):
+    # Zero and unnamed combinations are valid flags without class attributes.
+    return rendering_parts.build_one_line_tree_node(
+        rendering_parts.siblings(
+            rendering_parts.maybe_qualified_type_name(cls), f"({node.value!r})"
         ),
         path,
     )
