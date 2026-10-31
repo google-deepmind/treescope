@@ -70,6 +70,8 @@ def _truncate_and_copy(
       )
     else:
       assert array_source.shape[axis] > 2 * edge_items
+      # A negative zero slice would select the entire axis.
+      trailing_slice = slice(-edge_items, None) if edge_items else slice(0, 0)
       _truncate_and_copy(
           array_source=array_source,
           array_dest=array_dest,
@@ -79,7 +81,7 @@ def _truncate_and_copy(
       _truncate_and_copy(
           array_source=array_source,
           array_dest=array_dest,
-          prefix_slices=prefix_slices + (slice(-edge_items, None),),
+          prefix_slices=prefix_slices + (trailing_slice,),
           remaining_edge_items_per_axis=remaining_edge_items_per_axis[1:],
       )
 

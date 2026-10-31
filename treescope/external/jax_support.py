@@ -168,6 +168,8 @@ def _truncate_part_with_slices(
     )
   else:
     assert array.shape[axis] > 2 * edge_items
+    # A negative zero slice would select the entire axis.
+    trailing_slice = slice(-edge_items, None) if edge_items else slice(0, 0)
     result_a, valid_a = _truncate_part_with_slices(
         array,
         mask,
@@ -178,7 +180,7 @@ def _truncate_part_with_slices(
     result_b, valid_b = _truncate_part_with_slices(
         array,
         mask,
-        prefix_slices=prefix_slices + (slice(-edge_items, None),),
+        prefix_slices=prefix_slices + (trailing_slice,),
         remaining_edge_items_per_axis=remaining_edge_items_per_axis[1:],
         xnp=xnp,
     )

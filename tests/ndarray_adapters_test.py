@@ -153,6 +153,50 @@ class NdarrayAdaptersTest(parameterized.TestCase):
             summary_info_np.split(" ", 1)[1], summary_info.split(" ", 1)[1]
         )
 
+  @parameterized.product(
+      array_type=["numpy", "jax", "torch"],
+      edge_items=[(0, None), (None, 0), (0, 2), (2, 0), (0, 0)],
+      masked=[False, True],
+  )
+  def test_zero_edge_truncation(self, array_type, edge_items, masked):
+    array_np = np.arange(19 * 23).reshape((19, 23))
+    mask_np = (array_np[0, :] % 3) != 0 if masked else None
+    if array_type == "numpy":
+      array, mask = array_np, mask_np
+    elif array_type == "jax":
+      array = jnp.array(array_np)
+      mask = jnp.array(mask_np) if masked else None
+    else:
+      array = torch.tensor(array_np)
+      mask = torch.tensor(mask_np) if masked else None
+
+    adapter = type_registries.lookup_ndarray_adapter(array)
+    data_out, mask_out = adapter.get_array_data_with_truncation(
+        array=array, mask=mask, edge_items_per_axis=edge_items
+    )
+    expected_shape = tuple(
+        size if edge is None else 2 * edge + 1
+        for size, edge in zip(array_np.shape, edge_items)
+    )
+    # Every displayed cell lies on an omitted axis when an edge count is zero.
+    np.testing.assert_array_equal(
+        data_out, np.zeros(expected_shape, array_np.dtype)
+    )
+    np.testing.assert_array_equal(mask_out, np.zeros(expected_shape, bool))
+
+  @parameterized.parameters("numpy", "jax", "torch")
+  def test_render_array_with_zero_minimum_edge_items(self, array_type):
+    if array_type == "numpy":
+      array = np.arange(20)
+    elif array_type == "jax":
+      array = jnp.arange(20)
+    else:
+      array = torch.arange(20)
+    result = treescope.render_array(
+        array, truncate=True, maximum_size=1, minimum_edge_items=0
+    )
+    self.assertIn("treescope-container", result._repr_html_())
+
   def test_pytorch_named_axes_info(self):
     if not hasattr(torch.Tensor, "rename"):
       self.skipTest("PyTorch named tensors are not supported in this version")
