@@ -31,6 +31,7 @@ from treescope import renderers
 from treescope import rendering_parts
 from treescope import repr_lib
 from treescope import type_registries
+from treescope.external import numpy_support
 
 # pylint: disable=import-outside-toplevel
 try:
@@ -120,144 +121,225 @@ def safe_to_summarize(array: jax.Array) -> bool:
   return thresh is None or array.size < thresh
 
 
-def _truncate_part_with_slices(
-    array: jax.Array,
-    mask: jax.Array,
-    prefix_slices: tuple[slice, ...],
-    remaining_edge_items_per_axis: tuple[int | None, ...],
-    xnp=None,
-) -> tuple[jax.Array, jax.Array]:
-  """Helper to truncate names of an array.
+def _as_mesh_array(array: jax.Array) -> tuple[jax.Array, jax.sharding.Mesh]:
+  """Returns a view of `array` with a `NamedSharding`, along with its mesh.
+
+  JAX arrays either have a `NamedSharding` or live on a single device. A
+  single-device array is re-wrapped (without copying) as a replicated array on
+  a one-device mesh, so that it can be handled the same way as a sharded one.
 
   Args:
-    array: An array to truncate.
-    mask: Mask array, which must be broadcastable to `array`.
-    prefix_slices: Slices to apply to each axis of `array` and `mask`, starting
-      at axis 0, which we have already computed.
-    remaining_edge_items_per_axis: Number of edge items to keep for each axis,
-      ignoring any axes whose slices are already computed in `prefix_slices`.
-    xnp: backend to use (numpy or jax.numpy).
+    array: The array to view.
 
   Returns:
-    Truncated array and mask, which will both be the same shape.
+    A tuple ``(array_view, mesh)``, where ``array_view.sharding`` is a
+    `NamedSharding` over ``mesh``.
   """
-  if xnp is None:
-    assert jax is not None, "JAX is not available."
-    xnp = jax.numpy
+  assert jax is not None, "JAX is not available."
+  sharding = array.sharding
+  if isinstance(sharding, jax.sharding.NamedSharding):
+    return array, sharding.mesh
+  devices = list(sharding.device_set)
+  if len(devices) != 1:
+    raise ValueError(f"Unsupported sharding for a JAX array: {sharding}")
+  mesh = jax.sharding.Mesh(np.array(devices), ("single_device",))
+  array_view = jax.make_array_from_single_device_arrays(
+      array.shape,
+      jax.sharding.NamedSharding(
+          mesh,
+          jax.sharding.PartitionSpec(),
+          memory_kind=sharding.memory_kind,
+      ),
+      [shard.data for shard in array.addressable_shards],
+  )
+  return array_view, mesh
 
-  array = xnp.array(array)
-  mask = xnp.array(mask)
-  mask = xnp.broadcast_to(mask, array.shape)
-  if not remaining_edge_items_per_axis:
-    # Perform the base case slice.
-    assert len(prefix_slices) == len(array.shape)
-    truncated_array = array[prefix_slices]
 
-    valid_mask_slices = tuple(
-        slice(None) if mask.shape[i] == 1 else array_slice
-        for i, array_slice in enumerate(prefix_slices)
-    )
-    truncated_mask = xnp.broadcast_to(
-        xnp.array(mask[valid_mask_slices]), truncated_array.shape
-    )
-    return truncated_array, truncated_mask
-
-  # Recursive step: extract one name, run the function on each side, and
-  # concatenate.
-  axis = len(prefix_slices)
-  edge_items = remaining_edge_items_per_axis[0]
+def _edge_positions(size: int, edge_items: int | None) -> np.ndarray:
+  """Returns the source index for each position along a truncated axis."""
   if edge_items is None:
-    # Don't need to slice.
-    return _truncate_part_with_slices(
-        array,
-        mask,
-        prefix_slices=prefix_slices + (slice(None),),
-        remaining_edge_items_per_axis=remaining_edge_items_per_axis[1:],
-        xnp=xnp,
+    return np.arange(size)
+  # The gap element in the middle is marked with -1, which no shard contains.
+  return np.concatenate([
+      np.arange(edge_items),
+      [-1],
+      np.arange(size - edge_items, size),
+  ])
+
+
+def _gather_edges_from_each_shard(
+    array: jax.Array,
+    mesh: jax.sharding.Mesh,
+    spec: jax.sharding.PartitionSpec,
+    edge_items_per_axis: tuple[int | None, ...],
+) -> tuple[jax.Array, jax.Array]:
+  """Gathers the edge elements of every shard of an array, in one program.
+
+  Each device computes which edge elements (in global coordinates) fall
+  inside its local block of the array, and gathers them locally. The small
+  per-shard results are then all-gathered, so that the output is replicated
+  across devices (and readable from every process, for arrays that span
+  multiple hosts). This works for any sharding, including
+  explicit-mode (`jax.sharding.AxisType.Explicit`) shardings, which do not
+  support slicing a sharded axis to a size that isn't divisible by the number
+  of shards.
+
+  Args:
+    array: The array to truncate.
+    mesh: The mesh of the array's `NamedSharding`.
+    spec: The partition spec of the array's `NamedSharding`.
+    edge_items_per_axis: Number of edge items to keep for each axis, or None
+      to keep the whole axis.
+
+  Returns:
+    A tuple ``(candidates, owned)`` of replicated arrays whose shape is the
+    truncated shape with a new leading axis, which has one entry for each
+    distinct shard. ``owned[k]`` is True for the elements that shard ``k`` contains,
+    and ``candidates[k]`` holds their values (other entries are arbitrary).
+    Each element of the truncated array, except for the gap elements, is
+    owned by exactly one shard.
+  """
+  assert jax is not None, "JAX is not available."
+  jnp = jax.numpy
+  spec = tuple(spec) + (None,) * (array.ndim - len(spec))
+  mesh_axes_per_dim = [
+      () if entry is None else (entry,) if isinstance(entry, str) else entry
+      for entry in spec
+  ]
+  sharded_mesh_axes = tuple(
+      name for names in mesh_axes_per_dim for name in names
+  )
+  positions_per_dim = [
+      _edge_positions(size, edge_items)
+      for size, edge_items in zip(array.shape, edge_items_per_axis)
+  ]
+
+  def gather_local_edges(block):
+    values = block
+    owned = jnp.ones((1,) * block.ndim, dtype=bool)
+    for dim, positions in enumerate(positions_per_dim):
+      block_size = block.shape[dim]
+      if mesh_axes_per_dim[dim]:
+        block_start = jax.lax.axis_index(mesh_axes_per_dim[dim]) * block_size
+      else:
+        block_start = 0
+      local_positions = jnp.asarray(positions) - block_start
+      in_block = (local_positions >= 0) & (local_positions < block_size)
+      values = jnp.take(
+          values, jnp.clip(local_positions, 0, block_size - 1), axis=dim
+      )
+      broadcast_shape = [1] * block.ndim
+      broadcast_shape[dim] = len(positions)
+      owned = owned & in_block.reshape(broadcast_shape)
+    owned = jnp.broadcast_to(owned, values.shape)
+    if not sharded_mesh_axes:
+      return values[None], owned[None]
+    # Collect every shard's (small) result on every device, so that the
+    # output is replicated. This keeps it readable from any process when the
+    # array spans multiple hosts.
+    return (
+        jax.lax.all_gather(values, sharded_mesh_axes),
+        jax.lax.all_gather(owned, sharded_mesh_axes),
     )
-  else:
-    assert array.shape[axis] > 2 * edge_items
-    result_a, valid_a = _truncate_part_with_slices(
-        array,
-        mask,
-        prefix_slices=prefix_slices + (slice(None, edge_items),),
-        remaining_edge_items_per_axis=remaining_edge_items_per_axis[1:],
-        xnp=xnp,
+
+  replicated = jax.sharding.PartitionSpec()
+  return jax.shard_map(
+      gather_local_edges,
+      mesh=mesh,
+      in_specs=jax.sharding.PartitionSpec(*spec),
+      out_specs=(replicated, replicated),
+      # The outputs are all-gathered, so they are the same on every device,
+      # but JAX's static replication check doesn't treat `all_gather` results
+      # as replicated.
+      check_vma=False,
+  )(array)
+
+
+_gather_edges_from_each_shard_jit = (
+    jax.jit(_gather_edges_from_each_shard, static_argnums=(1, 2, 3))
+    if jax is not None
+    else None
+)
+
+
+def _truncate_on_device(
+    array: jax.Array,
+    edge_items_per_axis: tuple[int | None, ...],
+) -> tuple[np.ndarray, np.ndarray]:
+  """Truncates a JAX array on its devices and copies the result to the host.
+
+  Args:
+    array: The array to truncate.
+    edge_items_per_axis: Number of edge items to keep for each axis, or None
+      to keep the whole axis.
+
+  Returns:
+    A tuple ``(values, valid)`` of host arrays with the truncated shape.
+    ``valid`` is False only for the gap elements, whose values are zero.
+  """
+  assert jax is not None, "JAX is not available."
+  array, mesh = _as_mesh_array(array)
+  # Always run under the array's own mesh, so that this doesn't depend on any
+  # mesh context set by the caller: JAX rejects computations on an array under
+  # a mesh context for a different mesh (e.g. a single-device array while a
+  # global mesh is set).
+  with jax.set_mesh(mesh):
+    candidates, owned = _gather_edges_from_each_shard_jit(
+        array, mesh, array.sharding.spec, edge_items_per_axis
     )
-    result_b, valid_b = _truncate_part_with_slices(
-        array,
-        mask,
-        prefix_slices=prefix_slices + (slice(-edge_items, None),),
-        remaining_edge_items_per_axis=remaining_edge_items_per_axis[1:],
-        xnp=xnp,
-    )
-    padding_shape = list(result_a.shape)
-    padding_shape[axis] = 1
-    result = xnp.concatenate(
-        [result_a, xnp.zeros(padding_shape, result_a.dtype), result_b],
-        axis=axis,
-    )
-    valid = xnp.concatenate(
-        [valid_a, xnp.zeros(padding_shape, valid_a.dtype), valid_b], axis=axis
-    )
-    return result, valid
+  candidates, owned = jax.device_get((candidates, owned))
+  owner = np.argmax(owned, axis=0)
+  values = np.take_along_axis(candidates, owner[None], axis=0)[0]
+  valid = np.any(owned, axis=0)
+  values[~valid] = 0
+  return values, valid
 
 
 def truncate_array_and_mask(
     array: jax.Array,
-    mask: jax.Array,
+    mask: jax.Array | np.ndarray,
     edge_items_per_axis: tuple[int | None, ...],
-) -> tuple[jax.Array, jax.Array]:
-  """Truncates an array along the given axis names.
+) -> tuple[np.ndarray, np.ndarray]:
+  """Truncates an array along the given axes, and copies it to the host.
 
   Args:
     array: Array to truncate.
     mask: Mask array, which must have the same number of dimensions as `array`,
       and whose axis sizes must be either 1 or the same as that axis of `array`
       (e.g. they are broadcast compatible).
-    edge_items_per_axis: Number of edge items to keep for each axis, ignoring
-      any axes whose slices are already computed in `prefix_slices`.
+    edge_items_per_axis: Number of edge items to keep for each axis, or None
+      to keep the whole axis.
 
   Returns:
-    A tuple containing a truncated version of the array along with a valid mask.
-    Values taken from the original array have the valid mask as True, and there
-    is one extra element in the middle with valid as False (standing in for the
-    omitted elements). The return value is always fully replicated, because
-    we cannot guarantee that it is evenly sharded across devices, and this
-    function is usually used immediately before copying to the host.
+    A tuple containing a truncated version of the array along with a valid
+    mask, both as NumPy arrays. Values taken from the original array have the
+    valid mask as True (if the original mask was True), and there is one
+    extra element in the middle of each truncated axis with valid as False
+    (standing in for the omitted elements).
   """
   assert jax is not None, "JAX is not available."
-  sharding_kwargs = {}
-  if hasattr(array, "sharding") and hasattr(
-      array.sharding, "_device_assignment"
-  ):
-    # _truncate_part_with_slices usually returns slices that have odd
-    # dimensions, which aren't divisible by most shardings. Unfortunately,
-    # the XLA GSPMD partitioner sometimes still infers a sharding over one of
-    # these axes, which then leads to partitioning errors in JAX whenever we
-    # try to `device_get` the resulting array or call any additional operations
-    # on it. To avoid this, we'd like to tell JAX to always produce an output
-    # that is not sharded over any axis. Unfortunately, this is difficult
-    # because JAX requires the in_shardings and out_shardings to have the same
-    # devices in the same internal order, and at the time of writing JAX does
-    # not provide any public API to look up the order of the devices in a
-    # sharding (it allows looking up the device *set*, but not their order).
-    # Whether or not this error happens seems to be somewhat nondeterministic.
-    # To avoid this, we use the private property `_device_assignment` of
-    # each sharding in order to figure out what device order it has, and then
-    # explicitly request a fully-replicated output that is definitely safe to
-    # retrieve.
-    sharding_kwargs["out_shardings"] = jax.sharding.NamedSharding(
-        jax.sharding.Mesh(array.sharding._device_assignment, "x"),  # pylint: disable=protected-access
-        jax.sharding.PartitionSpec(),
-    )
+  numpy_adapter = numpy_support.NumpyArrayAdapter()
   if array.size < SUMMARIZE_USING_NUMPY_THRESHOLD and safe_to_summarize(array):
-    fn = functools.partial(_truncate_part_with_slices, xnp=np)
-  else:
-    fn = jax.jit(
-        _truncate_part_with_slices, static_argnums=(2, 3), **sharding_kwargs
+    # Copying a small array to the host is cheaper than compiling a program.
+    return numpy_adapter.get_array_data_with_truncation(
+        np.asarray(array), np.asarray(mask), edge_items_per_axis
     )
-  return fn(array, mask, (), edge_items_per_axis)
+
+  values, valid = _truncate_on_device(array, edge_items_per_axis)
+  # Truncate the mask too, keeping any length-1 (broadcasted) axes as-is.
+  mask_edge_items_per_axis = tuple(
+      None if mask_size == 1 else edge_items
+      for mask_size, edge_items in zip(np.shape(mask), edge_items_per_axis)
+  )
+  if isinstance(mask, jax.Array) and any(
+      edge_items is not None for edge_items in mask_edge_items_per_axis
+  ):
+    mask_values, _ = _truncate_on_device(mask, mask_edge_items_per_axis)
+  else:
+    mask_values, _ = numpy_adapter.get_array_data_with_truncation(
+        np.asarray(mask), None, mask_edge_items_per_axis
+    )
+  return values, valid & mask_values.astype(bool)
 
 
 def faster_array_repr(array: jax.Array) -> str:
@@ -543,8 +625,7 @@ class JAXArrayAdapter(ndarray_adapters.NDArrayAdapter[jax.Array]):
       # No truncation.
       return np.array(array), np.broadcast_to(mask, array.shape)
 
-    array, mask = truncate_array_and_mask(array, mask, edge_items_per_axis)
-    return jax.device_get((array, mask))
+    return truncate_array_and_mask(array, mask, edge_items_per_axis)
 
   def get_array_summary(
       self, array: jax.Array, fast: bool
