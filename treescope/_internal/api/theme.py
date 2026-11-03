@@ -24,5 +24,5 @@ Theme = Literal["light", "dark", "auto"]
 theme: context.ContextualValue[Theme] = context.ContextualValue(
     module=__name__,
     qualname="theme",
-    initial_value="auto",
+    initial_value="light",
 )
