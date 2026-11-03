@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest import mock
+
 from absl.testing import absltest
 from absl.testing import parameterized
 from jax import numpy as jnp
@@ -50,6 +52,14 @@ class JaxSupportTest(parameterized.TestCase):
     rendered = treescope.external.jax_support.faster_array_repr(keys)
 
     self.assertEqual(rendered, repr(keys))
+
+  def test_set_up_treescope_rejects_old_jax(self):
+    registry = treescope.type_registries.TREESCOPE_HANDLER_REGISTRY
+    registered_before = dict(registry)
+    with mock.patch.object(jax, "__version_info__", (0, 4, 37)):
+      with self.assertWarnsRegex(UserWarning, "requires JAX >= 0.7.1"):
+        treescope.external.jax_support.set_up_treescope()
+    self.assertEqual(dict(registry), registered_before)
 
 
 if __name__ == "__main__":

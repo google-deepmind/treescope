@@ -19,6 +19,7 @@ from __future__ import annotations
 import functools
 import typing
 from typing import Any, Mapping, Sequence
+import warnings
 
 import numpy as np
 from treescope import canonical_aliases
@@ -38,6 +39,14 @@ except ImportError:
   assert not typing.TYPE_CHECKING
   jax = None
 # pylint: enable=import-outside-toplevel
+
+
+MINIMUM_JAX_VERSION = (0, 7, 1)
+"""The oldest JAX version supported by treescope's JAX integration.
+
+With older versions of JAX, `set_up_treescope` warns and leaves JAX support
+disabled, so that JAX values are rendered like other Python objects.
+"""
 
 
 def _is_subdtype(dtype, base) -> bool:
@@ -685,6 +694,14 @@ def set_up_treescope():
     raise RuntimeError(
         "Cannot set up JAX support in treescope: JAX cannot be imported."
     )
+  if jax.__version_info__ < MINIMUM_JAX_VERSION:
+    minimum = ".".join(str(part) for part in MINIMUM_JAX_VERSION)
+    warnings.warn(
+        f"Treescope's JAX support requires JAX >= {minimum}, but JAX"
+        f" {jax.__version__} is installed. JAX support will be disabled, so"
+        " JAX values will be rendered like other Python objects."
+    )
+    return
   type_registries.TREESCOPE_HANDLER_REGISTRY[jax.ShapeDtypeStruct] = (
       make_checked_dataclasslike_renderer(
           jax.ShapeDtypeStruct,

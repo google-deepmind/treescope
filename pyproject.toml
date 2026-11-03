@@ -31,7 +31,7 @@ repository = "https://github.com/google-deepmind/treescope"
 # Dependencies required for running tests.
 test = [
     "absl-py>=1.4.0",
-    "jax>=0.4.23",
+    "jax>=0.7.1; python_version>='3.11'",
     "pytest>=8.2.2",
     "torch>=2.0.0",
     "pydantic>=2.0.0",
@@ -41,7 +41,7 @@ test = [
 notebook = [
     "ipython",
     "palettable",
-    "jax>=0.4.23",
+    "jax>=0.7.1; python_version>='3.11'",
 ]
 # Development deps (linting, formating,...)
 # Installed through `pip install .[dev]`
@@ -60,7 +60,7 @@ docs = [
     "sphinx-book-theme>=1.0.1",
     "sphinxcontrib-katex",
     "ipython>=8.8.0",
-    "jax[cpu]>=0.4.23",
+    "jax[cpu]>=0.7.1; python_version>='3.11'",
     "myst-nb>=1.0.0",
     "myst-parser>=3.0.1",
     "matplotlib>=3.5.0",
