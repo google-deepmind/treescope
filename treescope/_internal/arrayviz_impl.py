@@ -73,7 +73,7 @@ def html_setup() -> (
         }
         .arrayviz_container .info {
             font-family: monospace;
-            color: #aaaaaa;
+            color: var(--treescope-info-color);
             margin-bottom: 0.25em;
             white-space: pre;
         }
@@ -88,8 +88,8 @@ def html_setup() -> (
             border-radius: 3px;
         }
         .arrayviz_container .info input[type="number"]:not(:focus):not(:hover) {
-            color: #777777;
-            border: 1px solid #777777;
+            color: var(--treescope-input-color);
+            border: 1px solid var(--treescope-input-color);
         }
         .arrayviz_container .info.sliders {
             white-space: pre;
@@ -97,8 +97,9 @@ def html_setup() -> (
         .arrayviz_container .hovertip {
             display: none;
             position: absolute;
-            background-color: white;
-            border: 1px solid black;
+            background-color: var(--treescope-tooltip-bg);
+            color: var(--treescope-tooltip-fg);
+            border: 1px solid var(--treescope-tooltip-border-color);
             padding: 0.25ch;
             pointer-events: none;
             width: fit-content;
@@ -117,7 +118,7 @@ def html_setup() -> (
             white-space: pre;
         }
         .arrayviz_container .loading_message {
-            color: #aaaaaa;
+            color: var(--treescope-info-color);
         }
       """)),
       part_interface.JavaScriptDefn(

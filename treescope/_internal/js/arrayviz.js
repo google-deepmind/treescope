@@ -919,7 +919,9 @@ const arrayviz = (() => {
     const yLabelParts = [];
     const setCommonLabelStyles = (label) => {
       label.style.whiteSpace = 'pre';
-      label.style.borderBottom = '0.1em solid black';
+      label.style.color = 'var(--treescope-axis-label-color)';
+      label.style.borderBottom =
+          '0.1em solid var(--treescope-axis-label-color)';
       label.style.fontSize =
           'calc(min(1, max(0.6, var(--arrayviz-zoom))) * var(--base-font-size))';
     };

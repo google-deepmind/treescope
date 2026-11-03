@@ -313,12 +313,31 @@ def _render_to_html_as_root_streaming(
   stream.write("<style>")
   stream.write(html_escaping.without_repeated_whitespace("""
     .treescope_root {
+      --treescope-bg: white;
+      --treescope-fg: black;
+      --treescope-keyword-color: #0000ff;
+      --treescope-number-color: #098156;
+      --treescope-string-color: #a31515;
+      --treescope-comment-color: #aaaaaa;
+      --treescope-abbreviation-color: #682a00;
+      --treescope-error-color: red;
+      --treescope-deferred-color: #a7a7a7;
+      --treescope-marker-color: #cccccc;
+      --treescope-faint-color: #e0e0e0;
+      --treescope-copy-button-color: #e0e0e0;
+      --treescope-outline-color: #aaaaaa;
+      --treescope-axis-label-color: black;
+      --treescope-info-color: #aaaaaa;
+      --treescope-tooltip-bg: white;
+      --treescope-tooltip-fg: black;
+      --treescope-tooltip-border-color: black;
+      --treescope-input-color: #777777;
       position: relative;
       font-family: monospace;
       white-space: pre;
       list-style-type: none;
-      background-color: white;
-      color: black;
+      background-color: var(--treescope-bg);
+      color: var(--treescope-fg);
       width: fit-content;
       min-width: 100%;
       box-sizing: border-box;

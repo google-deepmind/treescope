@@ -45,7 +45,7 @@ class KeywordColor(basic_parts.BaseSpanGroup):
     return CSSStyleRule(html_escaping.without_repeated_whitespace("""
       .color_keyword
       {
-        color: #0000ff;
+        color: var(--treescope-keyword-color);
       }
     """))
 
@@ -60,7 +60,7 @@ class NumberColor(basic_parts.BaseSpanGroup):
     return CSSStyleRule(html_escaping.without_repeated_whitespace("""
       .color_number
       {
-        color: #098156;
+        color: var(--treescope-number-color);
       }
     """))
 
@@ -75,7 +75,7 @@ class StringLiteralColor(basic_parts.BaseSpanGroup):
     return CSSStyleRule(html_escaping.without_repeated_whitespace("""
       .color_string
       {
-        color: #a31515;
+        color: var(--treescope-string-color);
       }
     """))
 

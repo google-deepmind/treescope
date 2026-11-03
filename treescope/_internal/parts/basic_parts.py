@@ -1189,7 +1189,7 @@ class IndentedChildren(RenderableTreePart):
         .stacked_children:not({context.collapsed_selector} *)
         {{
             display: block;
-            border-left: dotted 1px #e0e0e0;
+            border-left: dotted 1px var(--treescope-faint-color);
         }}
         """)
     return functools.reduce(
@@ -1392,7 +1392,7 @@ class StyledBoxWithOutline(RenderableTreePart, abc.ABC):
 
 def in_outlined_box(
     child: part_interface.RenderableTreePart,
-    css_style: str = "outline: 1px dashed #aaaaaa;",
+    css_style: str = "outline: 1px dashed var(--treescope-outline-color);",
 ) -> RenderableTreePart:
   """Wraps a child into an outlined box.
 

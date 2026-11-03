@@ -118,7 +118,7 @@ class FoldableTreeNodeImpl(FoldableTreeNode):
 
         .foldable_node > label::before
         {{
-            color: #cccccc;
+            color: var(--treescope-marker-color);
             position: relative;
             left: -1ch;
             width: 0;
@@ -336,7 +336,7 @@ class StringCopyButton(RenderableTreePart):
               content: "\\e14d";
               font-family: 'Material Symbols Outlined Content Copy';
               -webkit-font-smoothing: antialiased;
-              color: #e0e0e0;
+              color: var(--treescope-copy-button-color);
               cursor: pointer;
               font-size: 0.9em;
           }}
@@ -344,7 +344,7 @@ class StringCopyButton(RenderableTreePart):
               color: darkseagreen;
           }}
           .copybutton.was_clicked > span::after {{
-              color: #cccccc;
+              color: var(--treescope-marker-color);
           }}
           .copybutton:hover > span::after {{
               color: darkseagreen;
@@ -358,7 +358,7 @@ class StringCopyButton(RenderableTreePart):
               color: darkseagreen;
           }}
           .copybutton.broken_copy {{
-              color: #e0e0e0;
+              color: var(--treescope-copy-button-color);
           }}
         """)),
     }
