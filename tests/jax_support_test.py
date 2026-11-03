@@ -44,6 +44,13 @@ class JaxSupportTest(parameterized.TestCase):
     )
     self.assertEqual(full_summary, "jax.Array key<fry>(10,)")
 
+  def test_faster_array_repr_large_prng_key_array(self):
+    keys = jax.random.split(jax.random.key(0, impl="threefry2x32"), 1001)
+
+    rendered = treescope.external.jax_support.faster_array_repr(keys)
+
+    self.assertEqual(rendered, repr(keys))
+
 
 if __name__ == "__main__":
   absltest.main()
