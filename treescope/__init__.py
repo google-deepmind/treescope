@@ -129,18 +129,18 @@ theme: context.ContextualValue[typing.Literal['light', 'dark', 'auto']] = theme
 
 This can be set to:
 
-* ``"light"``, to render dark text on a light background,
+* ``"light"`` (the default), to render dark text on a light background,
 * ``"dark"``, to render light text on a dark background,
-* ``"auto"`` (the default), to match the theme of whatever is displaying the
+* ``"auto"``, to match the theme of whatever is displaying the
   rendering.
 
 In ``"auto"`` mode, the theme is determined in the browser when the rendering
 is displayed, by inspecting the text color that the rendering inherits from
 the page around it. Renderings fall back to ``"light"`` if that isn't
 possible, for instance if they are displayed somewhere that doesn't run
-JavaScript. A rendering that has matched a dark page also keeps that page's
+JavaScript. A rendering that has matched the page also keeps that page's
 background instead of drawing one of its own, so that it blends in with
-whatever shade of dark the page happens to use.
+whatever shade the page happens to use.
 
 This has no effect on text renderings, which are never colored.
 """

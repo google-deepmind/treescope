@@ -1190,11 +1190,17 @@ class RepresentationPartsTest(parameterized.TestCase):
 
   def test_theme(self):
     part = MockRenderableTreePart('A')
-    with self.subTest('auto_by_default'):
+    with self.subTest('light_by_default'):
       self.assertIn(
-          'class="treescope_root theme_auto"',
+          'class="treescope_root theme_light"',
           lowering.render_to_html_as_root(part),
       )
+    with self.subTest('auto'):
+      with theme.theme.set_scoped('auto'):
+        self.assertIn(
+            'class="treescope_root theme_auto"',
+            lowering.render_to_html_as_root(part),
+        )
     with self.subTest('light'):
       with theme.theme.set_scoped('light'):
         self.assertIn(
@@ -1223,11 +1229,11 @@ class RepresentationPartsTest(parameterized.TestCase):
       # other even though they are spelled differently.
       html_output = lowering.render_to_html_as_root(part)
       self.assertIn(
-          'root.dataset.treescopeTheme = pageIsDark ? "dark" : "light"',
+          'root.dataset.treescopeDetectedTheme = pageIsDark ? "dark" : "light"',
           html_output,
       )
-      self.assertIn('[data-treescope-theme="dark"]', html_output)
-      self.assertIn('[data-treescope-theme="light"]', html_output)
+      self.assertIn('[data-treescope-detected-theme="dark"]', html_output)
+      self.assertIn('[data-treescope-detected-theme]', html_output)
 
   def test_build_qualified_type_name(self):
     type_registries.update_registries_for_imports()
