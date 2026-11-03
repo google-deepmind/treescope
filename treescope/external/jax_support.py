@@ -529,7 +529,8 @@ def _summarize_array_data_unconditionally(array: jax.Array) -> list[str]:
   assert jax is not None, "JAX is not available."
   jnp = jax.numpy
   output_parts = []
-  # This is required if treescope is invoked inside jitted function.
+  # If treescope is called from inside a jitted function, this makes our own
+  # computations run eagerly instead of being staged into the traced function.
   with jax.core.ensure_compile_time_eval():
     is_floating = _is_subdtype(array.dtype, jnp.floating)
     is_integer = _is_subdtype(array.dtype, jnp.integer)
@@ -543,7 +544,13 @@ def _summarize_array_data_unconditionally(array: jax.Array) -> list[str]:
       stat = _compute_summary(array, is_floating, is_integer, is_bool, xnp=np)
     else:
       compute_summary = jax.jit(_compute_summary, static_argnums=(1, 2, 3))
-      stat = compute_summary(array, is_floating, is_integer, is_bool)
+      # Run under the array's own mesh. Explicitly-sharded arrays need a
+      # matching mesh context here, and JAX rejects computations on an array
+      # under a mesh context for a different mesh (e.g. a single-device array
+      # while a global mesh is set).
+      array, mesh = _as_mesh_array(array)
+      with jax.set_mesh(mesh):
+        stat = compute_summary(array, is_floating, is_integer, is_bool)
       # Get values in parallel.
       stat = jax.device_get(stat)
 

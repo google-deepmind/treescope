@@ -16,12 +16,14 @@
 
 import ast
 import collections
+import contextlib
 import dataclasses
 import functools
 import re
 import textwrap
 import types
 from typing import Any, Callable, Literal
+from unittest import mock
 import warnings
 
 from absl.testing import absltest
@@ -1060,23 +1062,42 @@ class TreescopeRendererTest(parameterized.TestCase):
     )
 
   def test_render_jax_array_within_jitted_function(self):
-    old = jax_support.SUMMARIZE_USING_NUMPY_THRESHOLD
-    jax_support.SUMMARIZE_USING_NUMPY_THRESHOLD = 0
-    renderer = treescope.active_renderer.get()
+    # Rendering a concrete array from inside a jitted function must not stage
+    # treescope's own computations into the function being traced.
     x = jnp.arange(10)
+    adapter = jax_support.JAXArrayAdapter()
+    summaries = {}
 
-    # Verify that we don't fail when called inside a jitted function.
-    @jax.jit
-    def go(s):
-      nonlocal renderer, x
-      adapter = jax_support.JAXArrayAdapter()
-      self.assertNotEmpty(
-          helpers.ensure_text(adapter.get_array_summary(x, False))
-      )
-      return jax.numpy.sum(s)
+    def go(s, force_device_summary):
+      if force_device_summary:
+        threshold = mock.patch.object(
+            jax_support, "SUMMARIZE_USING_NUMPY_THRESHOLD", 0
+        )
+      else:
+        threshold = contextlib.nullcontext()
+      with threshold:
+        try:
+          summaries[force_device_summary] = helpers.ensure_text(
+              adapter.get_array_summary(x, False)
+          )
+        except Exception:  # pylint: disable=broad-exception-caught
+          # Summarizing on device may fail while tracing, which is fine.
+          summaries[force_device_summary] = None
+      return jnp.sum(s)
 
-    go(jnp.arange(3))
-    jax_support.SUMMARIZE_USING_NUMPY_THRESHOLD = old
+    expected_jaxpr = str(jax.make_jaxpr(jnp.sum)(jnp.arange(3)))
+    for force_device_summary in (False, True):
+      jaxpr = jax.make_jaxpr(
+          functools.partial(go, force_device_summary=force_device_summary)
+      )(jnp.arange(3))
+      self.assertEqual(str(jaxpr), expected_jaxpr)
+
+    # Small arrays are summarized on the host, which works while tracing.
+    self.assertEqual(
+        summaries[False], "jax.Array int32(10,) [≥0, ≤9] zero:1 nonzero:9"
+    )
+    if summaries[True] is not None:
+      self.assertEqual(summaries[True], summaries[False])
 
   def test_fallback_repr_pytree_node(self):
     self.skipTest("TODO(ivyzheng): Make the test independetn of GetAttrKey")

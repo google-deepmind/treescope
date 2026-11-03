@@ -89,6 +89,16 @@ def _force_device_truncation():
   return mock.patch.object(jax_support, "SUMMARIZE_USING_NUMPY_THRESHOLD", 0)
 
 
+def _force_device_summary():
+  """Makes small arrays use the same summary code as very large ones."""
+  stack = contextlib.ExitStack()
+  stack.enter_context(_force_device_truncation())
+  stack.enter_context(
+      jax_support.summarization_threshold.set_scoped({"default": None})
+  )
+  return stack
+
+
 class ShardedJaxArrayTest(parameterized.TestCase):
   """Tests for sharded arrays, using the CPU devices set up in conftest.py."""
 
@@ -235,6 +245,40 @@ class ShardedJaxArrayTest(parameterized.TestCase):
       )
     np.testing.assert_array_equal(values, expected_values)
     np.testing.assert_array_equal(valid, expected_valid)
+
+  @parameterized.product(
+      axis_type=["Explicit", "Auto"],
+      mesh_context=["none", "same", "other"],
+  )
+  def test_summary_of_sharded_array(self, axis_type, mesh_context):
+    axis_type = getattr(jax.sharding.AxisType, axis_type)
+    mesh = _cpu_mesh(axis_type)
+    other_mesh = jax.make_mesh(
+        (8,), ("z",), axis_types=(axis_type,), devices=jax.devices("cpu")[:8]
+    )
+    data = np.arange(64 * 48, dtype=np.float32).reshape(64, 48) - 100
+    data[0, 0] = np.nan
+    array = jax.device_put(data, jax.sharding.NamedSharding(mesh, P("a", "b")))
+    # Small arrays are normally summarized on the host, using NumPy.
+    expected = jax_support.summarize_array_data(jnp.asarray(data))
+
+    make_context = {
+        "none": contextlib.nullcontext,
+        "same": lambda: jax.set_mesh(mesh),
+        "other": lambda: jax.set_mesh(other_mesh),
+    }[mesh_context]
+    with _force_device_summary(), make_context():
+      summary = jax_support.summarize_array_data(array)
+    self.assertEqual(summary, expected)
+
+  def test_summary_of_single_device_array_under_global_mesh(self):
+    mesh = _cpu_mesh(jax.sharding.AxisType.Explicit)
+    data = np.arange(30 * 20, dtype=np.float32).reshape(30, 20)
+    array = jax.device_put(data, jax.devices("cpu")[3])
+    expected = jax_support.summarize_array_data(array)  # On the host.
+    with _force_device_summary(), jax.set_mesh(mesh):
+      summary = jax_support.summarize_array_data(array)
+    self.assertEqual(summary, expected)
 
   def test_render_explicitly_sharded_array_regression(self):
     # Regression test for https://github.com/google-deepmind/treescope/issues/70
