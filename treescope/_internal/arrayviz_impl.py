@@ -79,7 +79,7 @@ def html_setup() -> (
         }
         .arrayviz_container .info input[type="range"] {
             vertical-align: middle;
-            filter: grayscale(1) opacity(0.5);
+            filter: grayscale(1) opacity(var(--treescope-slider-opacity));
         }
         .arrayviz_container .info input[type="range"]:hover {
             filter: grayscale(0.5);
