@@ -34,6 +34,7 @@ from treescope._internal import html_escaping
 from treescope._internal.parts import foldable_impl
 from treescope._internal.parts import part_interface
 from treescope._internal.api import abbreviation
+from treescope._internal.api import theme as theme_lib
 
 _deferrables: context.ContextualValue[
     list[foldable_impl.DeferredWithThunk] | None
@@ -328,6 +329,7 @@ def _render_to_html_as_root_streaming(
       --treescope-outline-color: #aaaaaa;
       --treescope-axis-label-color: black;
       --treescope-info-color: #aaaaaa;
+      --treescope-slider-opacity: 0.5;
       --treescope-tooltip-bg: white;
       --treescope-tooltip-fg: black;
       --treescope-tooltip-border-color: black;
@@ -347,6 +349,29 @@ def _render_to_html_as_root_streaming(
       content-visibility: auto;
       contain-intrinsic-size: auto none;
     }
+    .treescope_root.theme_dark {
+      color-scheme: dark;
+      --treescope-bg: #1f1f1f;
+      --treescope-fg: #cccccc;
+      --treescope-keyword-color: #569cd6;
+      --treescope-number-color: #b5cea8;
+      --treescope-string-color: #ce9178;
+      --treescope-comment-color: #a6a6a6;
+      --treescope-abbreviation-color: var(--treescope-string-color);
+      --treescope-error-color: #f85149;
+      --treescope-deferred-color: #a6a6a6;
+      --treescope-marker-color: #6e7681;
+      --treescope-faint-color: #3f3f3f;
+      --treescope-copy-button-color: #6a6a6a;
+      --treescope-outline-color: #6a6a6a;
+      --treescope-axis-label-color: #cccccc;
+      --treescope-info-color: #9d9d9d;
+      --treescope-slider-opacity: 0.75;
+      --treescope-tooltip-bg: #202020;
+      --treescope-tooltip-fg: #cccccc;
+      --treescope-tooltip-border-color: #313131;
+      --treescope-input-color: #989898;
+    }
   """))
   stream.write("</style>")
   # These scripts allow us to defer execution of javascript blocks until after
@@ -358,7 +383,13 @@ def _render_to_html_as_root_streaming(
   stream.write("</script></treescope-run-here>")
 
   # Render the root node.
-  classnames = "treescope_root"
+  requested_theme = theme_lib.theme.get()
+  if requested_theme not in ("light", "dark"):
+    raise ValueError(
+        "`treescope.theme` must be 'light' or 'dark', but got"
+        f" {requested_theme!r}"
+    )
+  classnames = f"treescope_root theme_{requested_theme}"
   if roundtrip:
     classnames += " roundtrip_mode"
   stream.write(
