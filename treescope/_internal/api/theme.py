@@ -25,4 +25,4 @@ theme: context.ContextualValue[Theme] = context.ContextualValue(
     module=__name__,
     qualname="theme",
     initial_value="light",
-)
+)  # pytype: disable=annotation-type-mismatch
