@@ -1195,6 +1195,18 @@ class RepresentationPartsTest(parameterized.TestCase):
           'class="treescope_root theme_light"',
           lowering.render_to_html_as_root(part),
       )
+    with self.subTest('auto'):
+      with theme.theme.set_scoped('auto'):
+        self.assertIn(
+            'class="treescope_root theme_auto"',
+            lowering.render_to_html_as_root(part),
+        )
+    with self.subTest('light'):
+      with theme.theme.set_scoped('light'):
+        self.assertIn(
+            'class="treescope_root theme_light"',
+            lowering.render_to_html_as_root(part),
+        )
     with self.subTest('dark'):
       with theme.theme.set_scoped('dark'):
         self.assertIn(
@@ -1211,6 +1223,17 @@ class RepresentationPartsTest(parameterized.TestCase):
       with theme.theme.set_scoped('sepia'):
         with self.assertRaisesRegex(ValueError, "but got 'sepia'"):
           lowering.render_to_html_as_root(part)
+    with self.subTest('auto_detection_hook'):
+      # The container sets a dataset property and the stylesheet keys off the
+      # corresponding attribute, so the two have to keep agreeing with each
+      # other even though they are spelled differently.
+      html_output = lowering.render_to_html_as_root(part)
+      self.assertIn(
+          'root.dataset.treescopeDetectedTheme = pageIsDark ? "dark" : "light"',
+          html_output,
+      )
+      self.assertIn('[data-treescope-detected-theme="dark"]', html_output)
+      self.assertIn('[data-treescope-detected-theme]', html_output)
 
   def test_build_qualified_type_name(self):
     type_registries.update_registries_for_imports()
