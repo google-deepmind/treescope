@@ -27,7 +27,7 @@ jobs:
     # Install deps
     - uses: actions/setup-python@v4
       with:
-        python-version: 3.10.14
+        python-version: 3.12.16
         # Uncomment to cache of pip dependencies (if tests too slow)
         # cache: pip
         # cache-dependency-path: '**/pyproject.toml'
