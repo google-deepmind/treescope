@@ -153,6 +153,28 @@ class NdarrayAdaptersTest(parameterized.TestCase):
             summary_info_np.split(" ", 1)[1], summary_info.split(" ", 1)[1]
         )
 
+  def test_labels_for_missing_axis_names_are_ignored(self):
+    array = np.arange(12).reshape((3, 4))
+    with self.subTest("missing_names_ignored"):
+      res = treescope.render_array(
+          array,
+          axis_item_labels={0: ["a", "b", "c"], "missing": ["x"]},
+          axis_labels={1: "columns", "missing": "foo"},
+      )
+      html = treescope.render_to_html(res, compressed=False)
+      self.assertIn("columns", html)
+      self.assertNotIn("missing", html)
+
+    with self.subTest("missing_positions_not_ignored"):
+      with self.assertRaisesRegex(
+          ValueError, "Axis position 5 is out of range"
+      ):
+        treescope.render_array(array, axis_item_labels={5: ["y"]})
+      with self.assertRaisesRegex(
+          ValueError, "Axis position 5 is out of range"
+      ):
+        treescope.render_array(array, axis_labels={5: "bar"})
+
   def test_edge_items_must_be_positive(self):
     array = np.zeros((3, 100_000), dtype=np.float32)
     with self.subTest("explicit"):

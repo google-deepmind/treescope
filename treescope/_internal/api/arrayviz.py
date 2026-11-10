@@ -249,7 +249,8 @@ def render_array(
       axis_labels: Optional mapping from axis names / indices to the labels we
         should use for that axis. If not provided, we label the named axes with
         their names and the positional axes with "axis {i}", and also add th
-        axis size.
+        axis size. As with ``axis_item_labels``, names that don't match any axes
+        in the input are ignored.
       pixels_per_cell: Size of each rendered array element in pixels, between 1
         and 21 inclusive. This controls the zoom level of the rendering. Array
         elements are always drawn at 7 pixels per cell and then rescaled, so
@@ -430,14 +431,22 @@ def _render_pretruncated(
     else:
       raise ValueError(f"Unrecognized axis info {type(info)}")
 
-  axis_labels_by_info = {
-      info_by_name_or_position[orig_key]: value
-      for orig_key, value in axis_labels.items()
-  }
-  axis_item_labels_by_info = {
-      info_by_name_or_position[orig_key]: value
-      for orig_key, value in axis_item_labels.items()
-  }
+  def _labels_by_info(labels):
+    result = {}
+    for key, value in labels.items():
+      if key in info_by_name_or_position:
+        result[info_by_name_or_position[key]] = value
+      elif isinstance(key, int):
+        raise ValueError(
+            f"Axis position {key} is out of range for an array with"
+            f" {positional_count} positional axes."
+        )
+      # Otherwise, this is an axis name that isn't in this array. We ignore it,
+      # so that the same labels can be reused for arrays with different axes.
+    return result
+
+  axis_labels_by_info = _labels_by_info(axis_labels)
+  axis_item_labels_by_info = _labels_by_info(axis_item_labels)
 
   skip_start_indices = [
       edge_items if edge_items is not None else axis_info.size
