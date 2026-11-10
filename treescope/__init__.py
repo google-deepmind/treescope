@@ -29,6 +29,7 @@ or, for more control: ::
 You can also pretty-print individual values using `treescope.show` or
 `treescope.display`.
 """
+
 from __future__ import annotations
 
 # pylint: disable=g-importing-member,g-multiple-import,unused-import
@@ -208,7 +209,7 @@ fully roundtrippable due to the abbreviated children.
 """
 
 # Package version.
-__version__ = '0.1.10'
+__version__ = '0.1.11'
 
 
 # Set up canonical aliases for the treescope API itself.
