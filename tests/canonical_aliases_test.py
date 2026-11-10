@@ -361,6 +361,30 @@ class TreescopeCanonicalAliasesTest(parameterized.TestCase):
               ),
           )
 
+  def test_magic_aliases_prefer_locals_over_globals(self):
+    # Shadow the module-level `fixture_lib` global with a local of the same
+    # name, which should take priority (as in `{**globals(), **locals()}`).
+    import collections as fixture_lib  # pylint: disable=import-outside-toplevel,g-import-not-at-top,redefined-outer-name
+
+    with fresh_canonical_aliases():
+      with canonical_aliases.relative_alias_names("magic"):
+        self.assertEqual(
+            canonical_aliases.lookup_alias(
+                fixture_lib.OrderedDict, allow_relative=True
+            ),
+            canonical_aliases.LocalNamePath(
+                local_name="fixture_lib", attribute_path=("OrderedDict",)
+            ),
+        )
+        # The shadowed global module should not be aliased to the local name.
+        shadowed_alias = canonical_aliases.lookup_alias(
+            fixture_parent.treescope_examples_fixture.DataclassWithTwoChildren,
+            allow_relative=True,
+        )
+        self.assertNotEqual(
+            getattr(shadowed_alias, "local_name", None), "fixture_lib"
+        )
+
   @parameterized.named_parameters(
       dict(
           testcase_name="numpy.ndarray",

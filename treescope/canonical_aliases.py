@@ -459,9 +459,10 @@ def relative_alias_names(
   if relative_scope == "magic":
     # Infer the scope by walking the stack. 1 is the caller's frame.
     caller_frame_info = inspect.stack()[1]
+    # ChainMap gives priority to earlier mappings, so locals shadow globals.
     relative_scope = collections.ChainMap(
-        caller_frame_info.frame.f_globals,
         caller_frame_info.frame.f_locals,
+        caller_frame_info.frame.f_globals,
     )
 
   local_alias_map = {}
