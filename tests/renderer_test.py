@@ -195,6 +195,29 @@ class TreescopeRendererTest(parameterized.TestCase):
               ]"""),
       ),
       dict(
+          testcase_name="enums_with_mixins_and_flags",
+          target=[
+              fixture_lib.MyTestIntEnum.FOO,
+              fixture_lib.MyTestStrEnum.BAR,
+              fixture_lib.MyTestFlag.FOO,
+          ],
+          expected_collapsed=(
+              "[MyTestIntEnum.FOO, MyTestStrEnum.BAR, MyTestFlag.FOO]"
+          ),
+          expected_expanded=textwrap.dedent("""\
+              [
+                MyTestIntEnum.FOO,  # value: 1
+                MyTestStrEnum.BAR,  # value: 'bar'
+                MyTestFlag.FOO,  # value: 1
+              ]"""),
+          expected_roundtrip=textwrap.dedent("""\
+              [
+                tests.fixtures.treescope_examples_fixture.MyTestIntEnum.FOO,  # value: 1
+                tests.fixtures.treescope_examples_fixture.MyTestStrEnum.BAR,  # value: 'bar'
+                tests.fixtures.treescope_examples_fixture.MyTestFlag.FOO,  # value: 1
+              ]"""),
+      ),
+      dict(
           testcase_name="empty_dict",
           target={},
           expected_collapsed="{}",
@@ -1107,6 +1130,14 @@ class TreescopeRendererTest(parameterized.TestCase):
                 #╰┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄╯
               ,  # {object.__repr__(target[0])}
             ]"""),
+    )
+
+  def test_enum_flag_non_members_fall_back_to_repr(self):
+    flag_cls = fixture_lib.MyTestFlag
+    target = [flag_cls.FOO | flag_cls.BAR, flag_cls(0)]
+    self.assertEqual(
+        treescope.render_to_text(target),
+        f"[{repr(target[0])}, {repr(target[1])}]",
     )
 
   def test_fallback_repr_one_line(self):

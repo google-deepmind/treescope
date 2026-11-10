@@ -253,3 +253,18 @@ class SomePydanticModel(pydantic.BaseModel):
   a: int
   b: str
   c: float
+
+
+class MyTestIntEnum(enum.IntEnum):
+  FOO = 1
+  BAR = 2
+
+
+class MyTestStrEnum(str, enum.Enum):
+  FOO = "foo"
+  BAR = "bar"
+
+
+class MyTestFlag(enum.Flag):
+  FOO = 1
+  BAR = 2
