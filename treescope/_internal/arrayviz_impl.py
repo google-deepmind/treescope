@@ -216,31 +216,36 @@ def render_array_data_to_html(
   for axis in slider_axes:
     sliced_axis_specs_arg.append(axis_spec_arg(axis))
 
-  args_json = json.dumps({
-      "info": info,
-      "arrayBase64": base64.b64encode(converted_array_data.tobytes()).decode(
-          "ascii"
-      ),
-      "arrayDtype": array_dtype,
-      "validMaskBase64": base64.b64encode(
-          valid_mask.astype(np.uint8).tobytes()
-      ).decode("ascii"),
-      "dataStrides": strides,
-      "xAxisSpecs": x_axis_specs_arg,
-      "yAxisSpecs": y_axis_specs_arg,
-      "slicedAxisSpecs": sliced_axis_specs_arg,
-      "colormapConfig": {
-          "type": cmap_type,
-          "min": vmin,
-          "max": vmax,
-          "dynamic": dynamic_continuous_cmap,
-          "rawMinAbs": raw_min_abs,
-          "rawMaxAbs": raw_max_abs,
-          "cmapData": cmap_data,
+  # Use allow_nan=False because NaN/Infinity aren't valid JSON, and would cause
+  # `JSON.parse` to fail in the browser (leaving the figure unrendered).
+  args_json = json.dumps(
+      {
+          "info": info,
+          "arrayBase64": base64.b64encode(
+              converted_array_data.tobytes()
+          ).decode("ascii"),
+          "arrayDtype": array_dtype,
+          "validMaskBase64": base64.b64encode(
+              valid_mask.astype(np.uint8).tobytes()
+          ).decode("ascii"),
+          "dataStrides": strides,
+          "xAxisSpecs": x_axis_specs_arg,
+          "yAxisSpecs": y_axis_specs_arg,
+          "slicedAxisSpecs": sliced_axis_specs_arg,
+          "colormapConfig": {
+              "type": cmap_type,
+              "min": vmin,
+              "max": vmax,
+              "dynamic": dynamic_continuous_cmap,
+              "rawMinAbs": raw_min_abs,
+              "rawMaxAbs": raw_max_abs,
+              "cmapData": cmap_data,
+          },
+          "pixelsPerCell": pixels_per_cell,
+          "valueFormattingInstructions": formatting_instructions,
       },
-      "pixelsPerCell": pixels_per_cell,
-      "valueFormattingInstructions": formatting_instructions,
-  })
+      allow_nan=False,
+  )
   # Note: We need to save the parent of the treescope-run-here element first,
   # because it will be removed before the runSoon callback executes.
   inner_fn = html_escaping.without_repeated_whitespace("""

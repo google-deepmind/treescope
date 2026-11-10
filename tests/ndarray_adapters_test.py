@@ -193,6 +193,11 @@ class NdarrayAdaptersTest(parameterized.TestCase):
         html = treescope.render_to_html(res, compressed=False)
         self.assertNotIn("Infinity", html)
 
+  def test_rendering_with_infinite_bounds_raises(self):
+    array = np.arange(12, dtype=np.float32).reshape((3, 4))
+    with self.assertRaisesRegex(ValueError, "not JSON compliant"):
+      treescope.render_array(array, vmax=np.inf)
+
   def test_edge_items_must_be_positive(self):
     array = np.zeros((3, 100_000), dtype=np.float32)
     with self.subTest("explicit"):
