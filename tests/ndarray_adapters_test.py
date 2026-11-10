@@ -175,6 +175,24 @@ class NdarrayAdaptersTest(parameterized.TestCase):
       ):
         treescope.render_array(array, axis_labels={5: "bar"})
 
+  def test_rendering_without_finite_values_has_finite_bounds(self):
+    # Infinite colormap bounds would be emitted as `Infinity`, which isn't
+    # valid JSON and prevents the array from rendering.
+    all_nan = np.full((3, 4), np.nan, dtype=np.float32)
+    arange = np.arange(12, dtype=np.float32).reshape((3, 4))
+    cases = {
+        "all_nan": dict(array=all_nan),
+        "all_masked": dict(
+            array=arange, valid_mask=np.zeros((3, 4), dtype=bool)
+        ),
+        "all_nan_with_vmin": dict(array=all_nan, vmin=1.0),
+    }
+    for name, kwargs in cases.items():
+      with self.subTest(name):
+        res = treescope.render_array(**kwargs, around_zero=False)
+        html = treescope.render_to_html(res, compressed=False)
+        self.assertNotIn("Infinity", html)
+
   def test_edge_items_must_be_positive(self):
     array = np.zeros((3, 100_000), dtype=np.float32)
     with self.subTest("explicit"):

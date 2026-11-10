@@ -377,6 +377,19 @@ def infer_vmin_vmax(
   """Infer reasonable lower and upper colormap bounds from an array."""
   inferring_both_bounds = vmax is None and vmin is None
   finite_mask = np.logical_and(np.isfinite(array), mask)
+  if not np.any(finite_mask):
+    # There are no finite values to infer bounds from, so infer any missing
+    # bound from the other one (or use zero). This avoids returning infinite
+    # bounds, which can't be serialized to JSON.
+    if vmin is None and vmax is None:
+      return 0.0, 0.0
+    if vmax is None:
+      assert vmin is not None
+      vmax = -vmin if around_zero else vmin
+    if vmin is None:
+      vmin = -vmax if around_zero else vmax
+    return vmin, vmax
+
   if vmax is None:
     if around_zero:
       if vmin is not None:
