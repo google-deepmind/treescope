@@ -223,6 +223,32 @@ class NdarrayAdaptersTest(parameterized.TestCase):
         self.assertIsInstance(res, str)
         self.assertIn("arrayviz", res)
 
+  @parameterized.product(array_type=["numpy", "jax", "torch"])
+  def test_empty_array_rendering(self, array_type):
+    array_np = np.zeros((0, 500), dtype=np.float32)
+    if array_type == "numpy":
+      array = array_np
+    elif array_type == "jax":
+      array = jnp.array(array_np)
+    elif array_type == "torch":
+      array = torch.tensor(array_np)
+    else:
+      raise ValueError(f"Unsupported array_type: {array_type}")
+
+    with self.subTest("explicit"):
+      with self.assertRaisesRegex(ValueError, "Cannot render an empty array"):
+        treescope.render_array(array)
+
+    with self.subTest("automatic"):
+      with treescope.active_autovisualizer.set_scoped(
+          treescope.ArrayAutovisualizer()
+      ):
+        res = treescope.render_to_html(
+            [array], ignore_exceptions=False, compressed=False
+        )
+        self.assertIsInstance(res, str)
+        self.assertNotIn("arrayviz", res)
+
 
 if __name__ == "__main__":
   absltest.main()

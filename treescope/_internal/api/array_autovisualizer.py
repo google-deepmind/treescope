@@ -258,8 +258,8 @@ class ArrayAutovisualizer:
       # Extract information about axis names, indices, and sizes.
       array_axis_info = adapter.get_axis_info_for_array_data(value)
       total_size = np.prod([ax.size for ax in array_axis_info])
-      if total_size == 1:
-        # Don't visualize scalars.
+      if total_size <= 1:
+        # Don't visualize scalars or empty arrays.
         return None
 
       np_dtype = adapter.get_numpy_dtype(value)

@@ -277,6 +277,11 @@ def render_array(
 
   # Extract information about axis names, indices, and sizes.
   array_axis_info = adapter.get_axis_info_for_array_data(array)
+  if any(info.size == 0 for info in array_axis_info):
+    raise ValueError(
+        "Cannot render an empty array (shape has a zero-size axis):"
+        f" {tuple(info.size for info in array_axis_info)}"
+    )
 
   data_axis_from_axis_info = {
       info: axis for axis, info in enumerate(array_axis_info)
