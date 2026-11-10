@@ -173,7 +173,11 @@ def text_on_color(
     color = colormap[0]
   else:
     is_out_of_bounds = False
-    relative = (value - vmin) / (vmax - vmin)
+    if vmax == vmin:
+      # Matches arrayviz, which uses the middle of the colormap in this case.
+      relative = 0.5
+    else:
+      relative = (value - vmin) / (vmax - vmin)
     continuous_index = relative * (len(colormap) - 1)
     base_index = int(math.floor(continuous_index))
     offset = continuous_index - base_index
