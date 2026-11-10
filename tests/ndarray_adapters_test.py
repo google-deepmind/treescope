@@ -153,6 +153,23 @@ class NdarrayAdaptersTest(parameterized.TestCase):
             summary_info_np.split(" ", 1)[1], summary_info.split(" ", 1)[1]
         )
 
+  def test_edge_items_must_be_positive(self):
+    array = np.zeros((3, 100_000), dtype=np.float32)
+    with self.subTest("explicit"):
+      with self.assertRaisesRegex(ValueError, "minimum_edge_items"):
+        treescope.render_array(
+            array, truncate=True, maximum_size=20, minimum_edge_items=0
+        )
+    with self.subTest("explicit_without_truncation"):
+      # minimum_edge_items is ignored when not truncating.
+      res = treescope.render_array(
+          array[:, :10], truncate=False, minimum_edge_items=0
+      )
+      self.assertTrue(hasattr(res, "_repr_html_"))
+    with self.subTest("automatic"):
+      with self.assertRaisesRegex(ValueError, "edge_items"):
+        treescope.ArrayAutovisualizer(edge_items=0)
+
   @parameterized.product(array_type=["numpy", "jax", "torch"])
   def test_summary_bounds_ignore_infinities(self, array_type):
     array_np = np.array(

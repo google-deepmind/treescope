@@ -61,6 +61,7 @@ class ArrayAutovisualizer:
       their visual size increasing logarithmically with the true axis size
       beyond this point.
     edge_items: How many values to keep along each axis for truncated arrays.
+      Must be at least 1.
     prefers_column: Names that should always be assigned to columns.
     prefers_row: Names that should always be assigned to rows.
     around_zero: Whether to center continuous data around zero.
@@ -87,6 +88,10 @@ class ArrayAutovisualizer:
   include_repr_line_threshold: int = 5
   token_lookup_fn: Callable[[int], str] | None = None
   pixels_per_cell: int | float = 7
+
+  def __post_init__(self):
+    if self.edge_items < 1:
+      raise ValueError(f"edge_items must be at least 1, got {self.edge_items}")
 
   def _autovisualize_array(
       self,

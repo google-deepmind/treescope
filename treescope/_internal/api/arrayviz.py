@@ -232,7 +232,7 @@ def render_array(
         size beyond this point. Ignored unless ``truncate`` is True.
       minimum_edge_items: How many values to keep along each axis for truncated
         arrays. We may keep more than this up to the budget of maximum_size.
-        Ignored unless ``truncate`` is True.
+        Must be at least 1. Ignored unless ``truncate`` is True.
       axis_item_labels: An optional mapping from axis names/positions to a list
         of strings, of the same length as the axis length, giving a label to
         each item along that axis. For instance, this could be the token string
@@ -273,6 +273,10 @@ def render_array(
     raise ValueError(
         "pixels_per_cell must be between 1 and 21 inclusive, got"
         f" {pixels_per_cell}"
+    )
+  if truncate and minimum_edge_items < 1:
+    raise ValueError(
+        f"minimum_edge_items must be at least 1, got {minimum_edge_items}"
     )
 
   # Extract information about axis names, indices, and sizes.
