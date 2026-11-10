@@ -415,7 +415,7 @@ def _compute_summary(
     nanmin = lambda x: xnp.nanmin(x).astype(xnp.float32)
     nanmax = lambda x: xnp.nanmax(x).astype(xnp.float32)
     result.update(mean=nanmean(inf_to_nan), std=nanstd(inf_to_nan))
-    result.update(nanmin=nanmin(x), nanmax=nanmax(x))
+    result.update(nanmin=nanmin(inf_to_nan), nanmax=nanmax(inf_to_nan))
     result.update(
         nan=xnp.count_nonzero(xnp.isnan(x)),
         inf=xnp.count_nonzero(xnp.isposinf(x)),

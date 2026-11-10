@@ -153,6 +153,27 @@ class NdarrayAdaptersTest(parameterized.TestCase):
             summary_info_np.split(" ", 1)[1], summary_info.split(" ", 1)[1]
         )
 
+  @parameterized.product(array_type=["numpy", "jax", "torch"])
+  def test_summary_bounds_ignore_infinities(self, array_type):
+    array_np = np.array(
+        [1.0, 2.0, np.nan, np.inf, -np.inf, 7.0], dtype=np.float32
+    )
+    if array_type == "numpy":
+      array = array_np
+    elif array_type == "jax":
+      array = jnp.array(array_np)
+    elif array_type == "torch":
+      array = torch.tensor(array_np)
+    else:
+      raise ValueError(f"Unsupported array_type: {array_type}")
+
+    adapter = type_registries.lookup_ndarray_adapter(array)
+    summary = helpers.ensure_text(adapter.get_array_summary(array, fast=False))
+    self.assertEqual(
+        summary.split(" ", 1)[1],
+        "float32(6,) ≈3.3 ±2.6 [≥1.0, ≤7.0] nonzero:6 nan:1 inf:1 -inf:1",
+    )
+
   def test_pytorch_named_axes_info(self):
     if not hasattr(torch.Tensor, "rename"):
       self.skipTest("PyTorch named tensors are not supported in this version")

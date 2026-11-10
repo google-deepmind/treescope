@@ -163,7 +163,8 @@ class NumpyArrayAdapter(ndarray_adapters.NDArrayAdapter[np.ndarray]):
         if any_finite:
           summary_parts.append(f" ≈{float(mean):.2} ±{float(std):.2}")
           summary_parts.append(
-              f" [≥{float(np.nanmin(array)):.2}, ≤{float(np.nanmax(array)):.2}]"
+              f" [≥{float(np.nanmin(inf_to_nan)):.2},"
+              f" ≤{float(np.nanmax(inf_to_nan)):.2}]"
           )
 
       if is_integer:
